@@ -29,7 +29,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import net.sf.jabb.dstream.StreamDataSupplierWithId;
-import net.sf.jabb.dstream.StreamDataSupplierWithIdImpl;
+import net.sf.jabb.dstream.SimpleStreamDataSupplierWithId;
 import net.sf.jabb.dstream.eventhub.EventHubQpidStreamDataSupplier;
 import net.sf.jabb.util.jms.JmsUtility;
 
@@ -110,7 +110,7 @@ public class AzureEventHubUtility {
 
 	
 	/**
-	 * Create a list of {@link StreamDataSupplierWithIdImpl}s from an Event Hub.
+	 * Create a list of {@link SimpleStreamDataSupplierWithId}s from an Event Hub.
 	 * @param <M>		type of the message
 	 * @param server		the server name containing name space of the Event Hub
 	 * @param policyName	policy with read permission
@@ -118,7 +118,7 @@ public class AzureEventHubUtility {
 	 * @param eventHubName	name of the Event Hub
 	 * @param consumerGroup		consumer group name
 	 * @param messageConverter	JMS message converter
-	 * @return					a list of {@link StreamDataSupplierWithIdImpl}s, one per partition
+	 * @return					a list of {@link SimpleStreamDataSupplierWithId}s, one per partition
 	 * @throws JMSException		If list of partitions cannot be fetched
 	 */
 	public static <M> List<StreamDataSupplierWithId<M>> createStreamDataSuppliers(String server, String policyName, String policyKey,

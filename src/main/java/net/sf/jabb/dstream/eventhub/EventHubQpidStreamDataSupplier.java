@@ -28,7 +28,7 @@ import javax.jms.QueueBrowser;
 import javax.jms.Session;
 
 import net.sf.jabb.dstream.StreamDataSupplierWithId;
-import net.sf.jabb.dstream.StreamDataSupplierWithIdImpl;
+import net.sf.jabb.dstream.SimpleStreamDataSupplierWithId;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
@@ -193,7 +193,7 @@ public class EventHubQpidStreamDataSupplier<M> extends JmsConsumerStreamDataSupp
 	}
 	
 	/**
-	 * Create a list of {@link StreamDataSupplierWithIdImpl}s from an Event Hub.
+	 * Create a list of {@link SimpleStreamDataSupplierWithId}s from an Event Hub.
 	 * @param <M>		type of the message
 	 * @param server		the server name containing name space of the Event Hub
 	 * @param policyName	policy with read permission
@@ -201,7 +201,7 @@ public class EventHubQpidStreamDataSupplier<M> extends JmsConsumerStreamDataSupp
 	 * @param eventHubName	name of the Event Hub
 	 * @param consumerGroup		consumer group name
 	 * @param messageConverter	JMS message converter
-	 * @return					a list of {@link StreamDataSupplierWithIdImpl}s, one per partition
+	 * @return					a list of {@link SimpleStreamDataSupplierWithId}s, one per partition
 	 * @throws JMSException		If list of partitions cannot be fetched
 	 */
 	public static <M> List<StreamDataSupplierWithId<M>> create(String server, String policyName, String policyKey,
@@ -211,7 +211,7 @@ public class EventHubQpidStreamDataSupplier<M> extends JmsConsumerStreamDataSupp
 		for (String partition: partitions){
 			EventHubQpidStreamDataSupplier<M> supplier = new EventHubQpidStreamDataSupplier<>(server, eventHubName, policyName, policyKey,
 					consumerGroup, partition, messageConverter);
-			suppliers.add(new StreamDataSupplierWithIdImpl<>(partition, supplier));
+			suppliers.add(new SimpleStreamDataSupplierWithId<>(partition, supplier));
 		}
 		return suppliers;
 	}

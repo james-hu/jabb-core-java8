@@ -9,20 +9,20 @@ import org.apache.commons.lang3.Validate;
 
 
 /**
- * Data structure for a StreamDataSupplier and an ID.
+ * Simple data structure for a StreamDataSupplier and an ID.
  * @author James Hu
  *
  * @param <M> type of the message object
  */
-public class StreamDataSupplierWithIdImpl<M> implements StreamDataSupplierWithId<M> {
+public class SimpleStreamDataSupplierWithId<M> implements StreamDataSupplierWithId<M> {
 	protected String id;
 	protected StreamDataSupplier<M> supplier;
 	
-	public StreamDataSupplierWithIdImpl(){
+	public SimpleStreamDataSupplierWithId(){
 		
 	}
 	
-	public StreamDataSupplierWithIdImpl(String id, StreamDataSupplier<M> supplier){
+	public SimpleStreamDataSupplierWithId(String id, StreamDataSupplier<M> supplier){
 		this.id = id;
 		this.supplier = supplier;
 	}

@@ -284,7 +284,7 @@ public interface StreamDataSupplier<M> {
 	 * @return		an <code>StreamDataSupplierWithIdImpl</code> instance
 	 */
 	default StreamDataSupplierWithId<M> withId(String id){
-		return new StreamDataSupplierWithIdImpl<>(id, this);
+		return new SimpleStreamDataSupplierWithId<>(id, this);
 	}
 	
 }

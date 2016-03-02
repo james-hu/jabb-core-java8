@@ -5,6 +5,11 @@ package net.sf.jabb.dstream;
 
 import java.time.Instant;
 
+/**
+ * Data structure for a StreamDataSupplier and an ID.
+ *
+ * @param <M>	type of the message
+ */
 public interface StreamDataSupplierWithId<M> {
 	StreamDataSupplierWithIdAndPositionRange<M> withRange(String fromPosition, String toPosition);
 	
