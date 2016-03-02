@@ -17,7 +17,7 @@ import org.slf4j.Logger;
  *
  */
 class ProcessingContextImpl implements ProcessingContext{
-	private static final Logger logger = TransactionalStreamDataBatchProcessing.logger;
+	private static final Logger logger = DefaultTransactionalStreamDataBatchProcessing.logger;
 	
 	SequentialTransactionsCoordinator txCoordinator;
 	String seriesId;
@@ -75,7 +75,7 @@ class ProcessingContextImpl implements ProcessingContext{
 				logger.debug("Failed to renew transaction timeout for: seriesId={}, processorId={}, transactionId={}, startPosition={}, "
 						+ "endPosition={}, timeout={}=>{}. Exception: {}",
 					seriesId, transaction.getProcessorId(), transaction.getTransactionId(), transaction.getStartPosition(), 
-					transaction.getEndPosition(), transaction.getTimeout(), newTimeout, TransactionalStreamDataBatchProcessing.exceptionSummary(e));
+					transaction.getEndPosition(), transaction.getTimeout(), newTimeout, DefaultTransactionalStreamDataBatchProcessing.exceptionSummary(e));
 			}
 			return false;
 		}
@@ -92,7 +92,7 @@ class ProcessingContextImpl implements ProcessingContext{
 				logger.debug("Failed to update transaction detail for: seriesId={}, processorId={}, transactionId={}, startPosition={}, "
 						+ "endPosition={}, timeout={}, detail={}=>{}. Exception: {}",
 					seriesId, transaction.getProcessorId(), transaction.getTransactionId(), transaction.getStartPosition(), 
-					transaction.getEndPosition(), transaction.getTimeout(), transaction.getDetail(), newDetail, TransactionalStreamDataBatchProcessing.exceptionSummary(e));
+					transaction.getEndPosition(), transaction.getTimeout(), transaction.getDetail(), newDetail, DefaultTransactionalStreamDataBatchProcessing.exceptionSummary(e));
 			}
 			return false;
 		}
@@ -119,7 +119,7 @@ class ProcessingContextImpl implements ProcessingContext{
 			}catch(Exception e){
 				if (logger.isDebugEnabled()){
 					logger.debug("Unable to finish transaction for: seriesId={}, processorId={}, transactionId={}. Exception: {}",
-						seriesId, processorId, transactionId, TransactionalStreamDataBatchProcessing.exceptionSummary(e));
+						seriesId, processorId, transactionId, DefaultTransactionalStreamDataBatchProcessing.exceptionSummary(e));
 				}
 				return false;
 			}
@@ -137,7 +137,7 @@ class ProcessingContextImpl implements ProcessingContext{
 			}catch(Exception e){
 				if (logger.isDebugEnabled()){
 					logger.debug("Unable to abort transaction for: seriesId={}, processorId={}, transactionId={}. Exception: {}",
-						seriesId, processorId, transactionId, TransactionalStreamDataBatchProcessing.exceptionSummary(e));
+						seriesId, processorId, transactionId, DefaultTransactionalStreamDataBatchProcessing.exceptionSummary(e));
 				}
 				return false;
 			}
@@ -151,7 +151,7 @@ class ProcessingContextImpl implements ProcessingContext{
 			}catch(Exception e){
 				if (logger.isDebugEnabled()){
 					logger.debug("Failed to renew transaction timeout for: seriesId={}, processorId={}, transactionId={}, newTimeout={}. Exception: {}",
-						seriesId, processorId, transactionId, newTimeout, TransactionalStreamDataBatchProcessing.exceptionSummary(e));
+						seriesId, processorId, transactionId, newTimeout, DefaultTransactionalStreamDataBatchProcessing.exceptionSummary(e));
 				}
 				return false;
 			}
@@ -165,7 +165,7 @@ class ProcessingContextImpl implements ProcessingContext{
 			}catch(Exception e){
 				if (logger.isDebugEnabled()){
 					logger.debug("Failed to update transaction detail for: seriesId={}, processorId={}, transactionId={}, newDetail={}. Exception: {}",
-						seriesId, processorId, transactionId, newDetail, TransactionalStreamDataBatchProcessing.exceptionSummary(e));
+						seriesId, processorId, transactionId, newDetail, DefaultTransactionalStreamDataBatchProcessing.exceptionSummary(e));
 				}
 				return false;
 			}

@@ -35,9 +35,9 @@ import net.sf.jabb.dstream.WrappedJmsConnection;
 import net.sf.jabb.dstream.eventhub.EventHubQpidStreamDataSupplier;
 import net.sf.jabb.seqtx.azure.AzureSequentialTransactionsCoordinator;
 import net.sf.jabb.seqtx.ex.TransactionStorageInfrastructureException;
-import net.sf.jabb.txsdp.TransactionalStreamDataBatchProcessing.Options;
 import net.sf.jabb.txsdp.TransactionalStreamDataBatchProcessing.State;
 import net.sf.jabb.txsdp.TransactionalStreamDataBatchProcessing.Status;
+import net.sf.jabb.txsdp.DefaultTransactionalStreamDataBatchProcessing.Options;
 import net.sf.jabb.util.bean.TripleValueBean;
 import net.sf.jabb.util.col.PutIfAbsentMap;
 import net.sf.jabb.util.jms.JmsUtility;
@@ -157,7 +157,7 @@ public class StreamDataBatchProcessingIntegrationTest {
 		
 		Map<String, Set<Long>> logMap = new PutIfAbsentMap<String, Set<Long>>(new HashMap<String, Set<Long>>(), k->Collections.newSetFromMap(new ConcurrentHashMap<Long, Boolean>()));
 		
-		TransactionalStreamDataBatchProcessing<TripleValueBean<String, Long, String>> processing = new TransactionalStreamDataBatchProcessing<>("TestJob", options, createCoordinator(), 
+		TransactionalStreamDataBatchProcessing<TripleValueBean<String, Long, String>> processing = new DefaultTransactionalStreamDataBatchProcessing<>("TestJob", options, createCoordinator(), 
 			(context, data) -> {
 				if (data.size() > 0){
 					String first = data.get(0).getValue3();

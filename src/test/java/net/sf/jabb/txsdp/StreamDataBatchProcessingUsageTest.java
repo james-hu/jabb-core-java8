@@ -19,7 +19,6 @@ import javax.jms.JMSException;
 
 import net.sf.jabb.azure.AzureEventHubUtility;
 import net.sf.jabb.dstream.StreamDataSupplierWithId;
-import net.sf.jabb.dstream.StreamDataSupplierWithIdAndPositionRange;
 import net.sf.jabb.dstream.StreamDataSupplierWithIdAndRange;
 import net.sf.jabb.dstream.ex.DataStreamInfrastructureException;
 import net.sf.jabb.seqtx.SequentialTransactionsCoordinator;
@@ -81,8 +80,8 @@ List<StreamDataSupplierWithIdAndRange<String, ?>> suppliersWithIdAndRange = supp
 @Test
 public void setOptions(){
 	
-TransactionalStreamDataBatchProcessing.Options options = 
-	new TransactionalStreamDataBatchProcessing.Options()
+DefaultTransactionalStreamDataBatchProcessing.Options options = 
+	new DefaultTransactionalStreamDataBatchProcessing.Options()
 	    .withInitialTransactionTimeoutDuration(Duration.ofMinutes(1))
 	    .withMaxInProgressTransactions(10)
 	    .withMaxRetringTransactions(10)
@@ -92,10 +91,10 @@ TransactionalStreamDataBatchProcessing.Options options =
 }
 
 
-public void initializeProcessing(TransactionalStreamDataBatchProcessing.Options options, SequentialTransactionsCoordinator txCoordinator, List<StreamDataSupplierWithIdAndRange<String, ?>> suppliersWithIdAndRange){
+public void initializeProcessing(DefaultTransactionalStreamDataBatchProcessing.Options options, SequentialTransactionsCoordinator txCoordinator, List<StreamDataSupplierWithIdAndRange<String, ?>> suppliersWithIdAndRange){
 	
 TransactionalStreamDataBatchProcessing<String> processing = 
-	new TransactionalStreamDataBatchProcessing<>(
+	new DefaultTransactionalStreamDataBatchProcessing<>(
 		"TestProcessing", 	// ID, useful in logging
 		options, 			// options we specified
 		txCoordinator, 		// instance of SequentialTransactionsCoordinator
@@ -107,7 +106,7 @@ TransactionalStreamDataBatchProcessing<String> processing =
 
 }
 
-public void startStopEtc(int NUM_PROCESSORS, TransactionalStreamDataBatchProcessing<String> processing) throws TransactionStorageInfrastructureException, DataStreamInfrastructureException{
+public void startStopEtc(int NUM_PROCESSORS, DefaultTransactionalStreamDataBatchProcessing<String> processing) throws TransactionStorageInfrastructureException, DataStreamInfrastructureException{
 	
 ExecutorService threadPool = Executors.newCachedThreadPool();
 for (int i = 0; i < NUM_PROCESSORS; i ++){
