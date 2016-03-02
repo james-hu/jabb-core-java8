@@ -12,19 +12,7 @@ import net.sf.jabb.dstream.ex.DataStreamInfrastructureException;
  * @param <M> type of the message
  * @param <R> type of the range
  */
-public interface StreamDataSupplierWithIdAndRange<M, R> {
-	/**
-	 * Get the ID of the stream+range. Useful for logging
-	 * @return	the ID
-	 */
-	String getId();
-	
-	/**
-	 * Get the stream data supplier
-	 * @return	the stream data supplier
-	 */
-	StreamDataSupplier<M> getSupplier();
-	
+public interface StreamDataSupplierWithIdAndRange<M, R> extends StreamDataSupplierWithId<M> {
 	/**
 	 * Receive data from the supplier within range. Reference: {@link StreamDataSupplier#receive(Function, String, java.time.Instant)}
 	 * @param receiver	the receiver

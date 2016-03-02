@@ -22,9 +22,10 @@ import net.sf.jabb.seqtx.mem.InMemSequentialTransactionsCoordinator;
 import net.sf.jabb.txsdp.ProcessingContext;
 import net.sf.jabb.txsdp.SimpleBatchProcessor;
 import net.sf.jabb.txsdp.TransactionalStreamDataBatchProcessing;
-import net.sf.jabb.txsdp.TransactionalStreamDataBatchProcessing.Options;
 import net.sf.jabb.txsdp.TransactionalStreamDataBatchProcessing.State;
 import net.sf.jabb.txsdp.TransactionalStreamDataBatchProcessing.Status;
+import net.sf.jabb.txsdp.DefaultTransactionalStreamDataBatchProcessing;
+import net.sf.jabb.txsdp.DefaultTransactionalStreamDataBatchProcessing.Options;
 import net.sf.jabb.util.parallel.WaitStrategies;
 
 import org.junit.Test;
@@ -63,7 +64,7 @@ public class BatchProcessingMockedStreamDataTest {
 		AtomicLong totalEvents = new AtomicLong(0);
 		Set<Integer> all1m = Collections.newSetFromMap(new ConcurrentHashMap<Integer, Boolean>());
 
-		TransactionalStreamDataBatchProcessing<String> processing = new TransactionalStreamDataBatchProcessing<String>("Test", options, 
+		TransactionalStreamDataBatchProcessing<String> processing = new DefaultTransactionalStreamDataBatchProcessing<String>("Test", options, 
 				new InMemSequentialTransactionsCoordinator(),
 				(context, data) ->{
 					if (data.size() > 0){

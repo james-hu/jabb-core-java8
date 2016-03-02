@@ -7,8 +7,6 @@ import java.time.Instant;
 
 import org.apache.commons.lang3.Validate;
 
-import net.sf.jabb.dstream.ex.DataStreamInfrastructureException;
-
 
 /**
  * Data structure for a StreamDataSupplier and an ID.
@@ -54,15 +52,16 @@ public class StreamDataSupplierWithIdImpl<M> implements StreamDataSupplierWithId
 	public String getId() {
 		return id;
 	}
-	@Override
+
 	public void setId(String id) {
 		this.id = id;
 	}
+	
 	@Override
 	public StreamDataSupplier<M> getSupplier() {
 		return supplier;
 	}
-	@Override
+
 	public void setSupplier(StreamDataSupplier<M> supplier) {
 		this.supplier = supplier;
 	}

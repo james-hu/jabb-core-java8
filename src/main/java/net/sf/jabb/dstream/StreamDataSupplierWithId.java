@@ -10,11 +10,16 @@ public interface StreamDataSupplierWithId<M> {
 	
 	StreamDataSupplierWithIdAndEnqueuedTimeRange<M> withRange(Instant fromTime, Instant toTime);
 	
+	/**
+	 * Get the ID of the stream. Useful for logging
+	 * @return	the ID
+	 */
 	String getId();
 	
-	void setId(String id);
-	
+	/**
+	 * Get the stream data supplier
+	 * @return	the stream data supplier
+	 */
 	StreamDataSupplier<M> getSupplier();
 	
-	void setSupplier(StreamDataSupplier<M> supplier);
 }

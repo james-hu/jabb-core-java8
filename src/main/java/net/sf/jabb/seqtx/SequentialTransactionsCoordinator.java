@@ -714,12 +714,16 @@ public interface SequentialTransactionsCoordinator {
 	 * @author James Hu
 	 *
 	 */
-	static class TransactionCounts{
-		private int retrying;
-		private int inProgress;
-		private int failed;
+	public static class TransactionCounts{
+		protected int retrying;
+		protected int inProgress;
+		protected int failed;
 		
-		TransactionCounts(int inProgress, int retrying, int failed){
+		public TransactionCounts(){
+			
+		}
+		
+		public TransactionCounts(int inProgress, int retrying, int failed){
 			this.inProgress = inProgress;
 			this.retrying = retrying;
 			this.failed = failed;
