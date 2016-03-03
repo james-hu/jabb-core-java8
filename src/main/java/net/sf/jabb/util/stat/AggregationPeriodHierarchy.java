@@ -123,6 +123,7 @@ public class AggregationPeriodHierarchy<T> implements Serializable{
 	 * 						It must already exist in the hierarchy
 	 * @param upperLevel	the aggregation period that will be added
 	 * @return	true if successfully added, false if the upper level aggregation period already exists or if the base does not exist
+	 * @throws IllegalArgumentException  if the base aggregation period cannot be aggregated to the upper level aggregation period
 	 */
 	public boolean add(AggregationPeriod base, AggregationPeriod upperLevel){
 		return add(base, upperLevel, (T)null);
@@ -135,6 +136,7 @@ public class AggregationPeriodHierarchy<T> implements Serializable{
 	 * @param upperLevel	the aggregation period that will be added
 	 * @param attachment		the attachment object
 	 * @return	true if successfully added, false if the upper level aggregation period already exists or if the base does not exist
+	 * @throws IllegalArgumentException  if the base aggregation period cannot be aggregated to the upper level aggregation period
 	 */
 	public boolean add(AggregationPeriod base, AggregationPeriod upperLevel, T attachment){
 		return add(base.getCodeName(), upperLevel, attachment);
@@ -146,6 +148,7 @@ public class AggregationPeriodHierarchy<T> implements Serializable{
 	 * 						It must already exist in the hierarchy
 	 * @param upperLevel	the aggregation period that will be added
 	 * @return	true if successfully added, false if the upper level aggregation period already exists or if the base does not exist
+	 * @throws IllegalArgumentException  if the base aggregation period cannot be aggregated to the upper level aggregation period
 	 */
 	public boolean add(String baseCodeName, AggregationPeriod upperLevel){
 		return add(baseCodeName, upperLevel, (T)null);
@@ -158,13 +161,19 @@ public class AggregationPeriodHierarchy<T> implements Serializable{
 	 * @param upperLevel	the aggregation period that will be added
 	 * @param attachment		the attachment object
 	 * @return	true if successfully added, false if the upper level aggregation period already exists or if the base does not exist
+	 * @throws IllegalArgumentException  if the base aggregation period cannot be aggregated to the upper level aggregation period
 	 */
 	public boolean add(String baseCodeName, AggregationPeriod upperLevel, T attachment){
 		AggregationPeriodNode<T> parent = codeMapping.get(baseCodeName);
 		if (parent == null){
 			return false;
 		}
-
+		
+		if (!parent.aggregationPeriodAndAttachment.aggregationPeriod.canBeAggregatedTo(upperLevel)){
+			throw new IllegalArgumentException("Aggregation period [" + parent.aggregationPeriodAndAttachment.aggregationPeriod + "] cannot be aggregated to ["
+					+ upperLevel + "]");
+		}
+		
 		AggregationPeriodNode<T> child = new AggregationPeriodNode<T>(upperLevel, attachment);
 		String code = upperLevel.getCodeName();
 		if (codeMapping.putIfAbsent(code, child) == null){
@@ -183,6 +192,7 @@ public class AggregationPeriodHierarchy<T> implements Serializable{
 	 * @param amount	amount of the aggregation period
 	 * @param unit		unit of the aggregation period
 	 * @return	true if successfully added, false if the upper level aggregation period already exists or if the base does not exist
+	 * @throws IllegalArgumentException  if the base aggregation period cannot be aggregated to the upper level aggregation period
 	 */
 	public boolean add(String baseCodeName, int amount, AggregationPeriodUnit unit){
 		return add(baseCodeName, amount, unit, (T)null);
@@ -196,6 +206,7 @@ public class AggregationPeriodHierarchy<T> implements Serializable{
 	 * @param unit		unit of the aggregation period
 	 * @param attachment		the attachment object
 	 * @return	true if successfully added, false if the upper level aggregation period already exists or if the base does not exist
+	 * @throws IllegalArgumentException  if the base aggregation period cannot be aggregated to the upper level aggregation period
 	 */
 	public boolean add(String baseCodeName, int amount, AggregationPeriodUnit unit, T attachment){
 		return add(baseCodeName, new AggregationPeriod(amount, unit), attachment);
@@ -207,6 +218,7 @@ public class AggregationPeriodHierarchy<T> implements Serializable{
 	 * 						It must already exist in the hierarchy
 	 * @param codeName		code name of the aggregation period that will be added
 	 * @return	true if successfully added, false if the upper level aggregation period already exists or if the base does not exist
+	 * @throws IllegalArgumentException  if the base aggregation period cannot be aggregated to the upper level aggregation period
 	 */
 	public boolean add(String baseCodeName, String codeName){
 		return add(baseCodeName, codeName, (T)null);
@@ -219,6 +231,7 @@ public class AggregationPeriodHierarchy<T> implements Serializable{
 	 * @param codeName		code name of the aggregation period that will be added
 	 * @param attachment		the attachment object
 	 * @return	true if successfully added, false if the upper level aggregation period already exists or if the base does not exist
+	 * @throws IllegalArgumentException  if the base aggregation period cannot be aggregated to the upper level aggregation period
 	 */
 	public boolean add(String baseCodeName, String codeName, T attachment){
 		return add(baseCodeName, AggregationPeriod.parse(codeName), attachment);
@@ -231,6 +244,7 @@ public class AggregationPeriodHierarchy<T> implements Serializable{
 	 * @param amount	amount of the aggregation period that will be added
 	 * @param unit		unit of the aggregation period that will be added
 	 * @return	true if successfully added, false if the upper level aggregation period already exists or if the base does not exist
+	 * @throws IllegalArgumentException  if the base aggregation period cannot be aggregated to the upper level aggregation period
 	 */
 	public boolean add(int baseAmount, AggregationPeriodUnit baseUnit, int amount, AggregationPeriodUnit unit){
 		return add(baseAmount, baseUnit, amount, unit, (T)null);
@@ -244,6 +258,7 @@ public class AggregationPeriodHierarchy<T> implements Serializable{
 	 * @param unit		unit of the aggregation period that will be added
 	 * @param attachment		the attachment object
 	 * @return	true if successfully added, false if the upper level aggregation period already exists or if the base does not exist
+	 * @throws IllegalArgumentException  if the base aggregation period cannot be aggregated to the upper level aggregation period
 	 */
 	public boolean add(int baseAmount, AggregationPeriodUnit baseUnit, int amount, AggregationPeriodUnit unit, T attachment){
 		return add(AggregationPeriod.getCodeName(baseAmount, baseUnit), new AggregationPeriod(amount, unit), attachment);

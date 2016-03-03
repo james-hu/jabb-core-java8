@@ -222,6 +222,10 @@ public enum AggregationPeriodUnit {
 	 * @return	true if it can support, false otherwise
 	 */
 	public boolean canSupportAggregation(int thisLevelPeriods, AggregationPeriodUnit upperLevelUnit, int upperLevelPeriods){
+		if (this.equals(upperLevelUnit) && (upperLevelPeriods % thisLevelPeriods) == 0){
+			return true;
+		}
+		
 		int[] compatibleUnitPeriods = this.compatibleUpperLevels.get(upperLevelUnit);
 		if (compatibleUnitPeriods == null){
 			return false;
