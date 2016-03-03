@@ -29,6 +29,10 @@ public class DefaultAggregationPeriodKeySchemeTest {
 	static String APC_1MONTH = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR_MONTH);
 	static String APC_1YEAR = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR);
 
+	static String APC_1MIN_MEL = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ZoneId.of("Australia/Melbourne"));
+	static String APC_1MONTH_MEL = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR_MONTH, ZoneId.of("Australia/Melbourne"));
+	static String APC_1YEAR_MEL = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR, ZoneId.of("Australia/Melbourne"));
+
 	static String APC_5MIN = AggregationPeriod.getCodeName(5, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE);
 	static String APC_1HOUR = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR);
 	static String APC_6HOUR = AggregationPeriod.getCodeName(6, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR);
@@ -164,6 +168,37 @@ public class DefaultAggregationPeriodKeySchemeTest {
 	protected void testRoundTrip(String key){
 		assertEquals(key, hapks.nextKey(hapks.previousKey(key)));
 		assertEquals(key, hapks.previousKey(hapks.nextKey(key)));
+	}
+	
+	@Test
+	public void testRetrieveAggregationPeriodsWithTimeZone(){
+		AggregationPeriodHierarchy<?> aph;
+		aph = new AggregationPeriodHierarchy<>();
+		aph.add(APC_1MIN_MEL);
+			aph.add(APC_1MIN_MEL, APC_1MONTH_MEL);
+				aph.add(APC_1MONTH_MEL, APC_1YEAR_MEL);
+
+		HierarchicalAggregationPeriodKeyScheme hapks;
+		hapks = new DefaultAggregationPeriodKeyScheme(aph);
+
+		AggregationPeriod ap = hapks.retrieveAggregationPeriod("ok1N201603031249");
+		assertNotNull(ap);
+		assertEquals(ap.getZone(), ZoneId.of("Australia/Melbourne"));
+		assertEquals(1, ap.getAmount());
+		assertEquals(AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ap.getUnit());
+		
+		ap = hapks.retrieveAggregationPeriod("ok1M201603");
+		assertNotNull(ap);
+		assertEquals(ap.getZone(), ZoneId.of("Australia/Melbourne"));
+		assertEquals(1, ap.getAmount());
+		assertEquals(AggregationPeriodUnit.YEAR_MONTH, ap.getUnit());
+
+		ap = hapks.retrieveAggregationPeriod("ok1Y2016");
+		assertNotNull(ap);
+		assertEquals(ap.getZone(), ZoneId.of("Australia/Melbourne"));
+		assertEquals(1, ap.getAmount());
+		assertEquals(AggregationPeriodUnit.YEAR, ap.getUnit());
+
 	}
 
 }

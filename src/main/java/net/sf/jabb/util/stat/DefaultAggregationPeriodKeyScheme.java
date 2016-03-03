@@ -148,17 +148,9 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 	 * @return the next position after the last character of aggregation period code name, or -1 if not found
 	 */
 	static protected int endOfAggregationPeriod(String key){
-		int i;
-		
-		// find the first non-digit which should be the start of the AggregationPeriodUnit code
-		for (i = 1; i < key.length(); i ++){
+		for (int i = key.length() - 1; i >= 0; i --){
 			if (!Character.isDigit(key.charAt(i))){
-				// find the next first digit which marks the end of the AggregationPeriodUnit code
-				for (;i < key.length(); i ++){
-					if (Character.isDigit(key.charAt(i))){
-						return i;
-					}
-				}
+				return i + 1;
 			}
 		}
 		return -1;
