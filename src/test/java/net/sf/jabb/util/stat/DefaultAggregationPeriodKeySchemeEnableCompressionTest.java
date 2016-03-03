@@ -20,7 +20,7 @@ import org.junit.Test;
  * @author James Hu
  *
  */
-public class DefaultAggregationPeriodKeySchemeTest {
+public class DefaultAggregationPeriodKeySchemeEnableCompressionTest {
 	static ZoneId UTC = ZoneId.of("UTC");
 	static ZoneId GMT6 = ZoneId.of("GMT-6");
 	static ZoneId GMT3 = ZoneId.of("GMT-3");
@@ -32,8 +32,14 @@ public class DefaultAggregationPeriodKeySchemeTest {
 	static String APC_1YEAR = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR);
 
 	static String APC_1MIN_MEL = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ZoneId.of("Australia/Melbourne"));
+	static String APC_5MIN_MEL = AggregationPeriod.getCodeName(5, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ZoneId.of("Australia/Melbourne"));
+	static String APC_15MIN_MEL = AggregationPeriod.getCodeName(15, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ZoneId.of("Australia/Melbourne"));
+	static String APC_20MIN_MEL = AggregationPeriod.getCodeName(20, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ZoneId.of("Australia/Melbourne"));
+	static String APC_30MIN_MEL = AggregationPeriod.getCodeName(30, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ZoneId.of("Australia/Melbourne"));
 	static String APC_1MONTH_MEL = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR_MONTH, ZoneId.of("Australia/Melbourne"));
+	static String APC_6MONTH_MEL = AggregationPeriod.getCodeName(6, AggregationPeriodUnit.YEAR_MONTH, ZoneId.of("Australia/Melbourne"));
 	static String APC_1YEAR_MEL = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR, ZoneId.of("Australia/Melbourne"));
+	static String APC_5YEAR_MEL = AggregationPeriod.getCodeName(5, AggregationPeriodUnit.YEAR, ZoneId.of("Australia/Melbourne"));
 
 	static String APC_5MIN = AggregationPeriod.getCodeName(5, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE);
 	static String APC_1HOUR = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR);
@@ -65,7 +71,7 @@ public class DefaultAggregationPeriodKeySchemeTest {
 		aph.add(APC_1WEEK_BASED_YEAR_WEEK);
 			aph.add(APC_1WEEK_BASED_YEAR_WEEK, APC_1WEEK_BASED_YEAR);
 		
-		hapks = DefaultAggregationPeriodKeyScheme.newInstance(aph);
+		hapks = DefaultAggregationPeriodKeyScheme.newInstance(aph, true);
 	}
 	
 	@Test
@@ -78,19 +84,19 @@ public class DefaultAggregationPeriodKeySchemeTest {
 				aph.add(APC_1MONTH, APC_3MONTH);
 
 		HierarchicalAggregationPeriodKeyScheme hapks;
-		hapks = DefaultAggregationPeriodKeyScheme.newInstance(aph);
+		hapks = DefaultAggregationPeriodKeyScheme.newInstance(aph, true);
 
 		LocalDateTime ldt = LocalDateTime.parse("201503121703", DateTimeFormatter.ofPattern("uuuuMMddHHmm"));
 		
 		assertEquals(APC_1MONTH + "201503", hapks.generateKey(APC_1MONTH, ldt));
-		assertEquals(APC_2MONTH + "201503", hapks.generateKey(APC_2MONTH, ldt));
-		assertEquals(APC_3MONTH + "201501", hapks.generateKey(APC_3MONTH, ldt));
+		assertEquals(APC_2MONTH + "20151", hapks.generateKey(APC_2MONTH, ldt));
+		assertEquals(APC_3MONTH + "20150", hapks.generateKey(APC_3MONTH, ldt));
 		
-		assertEquals(APC_2MONTH + "201505", hapks.nextKey(APC_2MONTH + "201503"));
-		assertEquals(APC_2MONTH + "201501", hapks.previousKey(APC_2MONTH + "201503"));
+		assertEquals(APC_2MONTH + "20152", hapks.nextKey(APC_2MONTH + "20151"));
+		assertEquals(APC_2MONTH + "20150", hapks.previousKey(APC_2MONTH + "20151"));
 
-		assertEquals(APC_3MONTH + "201507", hapks.nextKey(APC_3MONTH + "201504"));
-		assertEquals(APC_3MONTH + "201501", hapks.previousKey(APC_3MONTH + "201504"));
+		assertEquals(APC_3MONTH + "20151", hapks.nextKey(APC_3MONTH + "20150"));
+		assertEquals(APC_3MONTH + "20143", hapks.previousKey(APC_3MONTH + "20150"));
 	}
 	
 	@Test
@@ -135,7 +141,7 @@ public class DefaultAggregationPeriodKeySchemeTest {
 		List<String> keys = hapks.upperLevelKeys(APC_1HOUR + "2015031217");
 		assertNotNull(keys);
 		assertEquals(2, keys.size());
-		assertEquals(APC_6HOUR + "2015031212", keys.get(0));
+		assertEquals(APC_6HOUR + "201503122", keys.get(0));
 		assertEquals(APC_1DAY + "20150312", keys.get(1));
 		
 		testRoundTrip(APC_1MIN + "201503121703");
@@ -143,7 +149,7 @@ public class DefaultAggregationPeriodKeySchemeTest {
 		testRoundTrip(APC_1YEAR + "2015");
 		testRoundTrip(APC_1MONTH + "201501");
 		testRoundTrip(APC_1MIN + "201503010000");
-		testRoundTrip(APC_6HOUR + "2015031212");
+		testRoundTrip(APC_6HOUR + "201503122");
 		testRoundTrip(APC_1DAY + "20150312");
 	}
 	
@@ -203,10 +209,16 @@ public class DefaultAggregationPeriodKeySchemeTest {
 		aph = new AggregationPeriodHierarchy<>();
 		aph.add(APC_1MIN_MEL);
 			aph.add(APC_1MIN_MEL, APC_1MONTH_MEL);
+			aph.add(APC_1MIN_MEL, APC_5MIN_MEL);
+				aph.add(APC_5MIN_MEL, APC_15MIN_MEL);
+				aph.add(APC_5MIN_MEL, APC_20MIN_MEL);
+				aph.add(APC_15MIN_MEL, APC_30MIN_MEL);
 				aph.add(APC_1MONTH_MEL, APC_1YEAR_MEL);
+				aph.add(APC_1MONTH_MEL, APC_6MONTH_MEL);
+				aph.add(APC_1MONTH_MEL, APC_5YEAR_MEL);
 
 		HierarchicalAggregationPeriodKeyScheme hapks;
-		hapks = DefaultAggregationPeriodKeyScheme.newInstance(aph);
+		hapks = DefaultAggregationPeriodKeyScheme.newInstance(aph, true);
 
 		AggregationPeriod ap = hapks.retrieveAggregationPeriod("ok1N201603031249");
 		assertNotNull(ap);
@@ -225,6 +237,13 @@ public class DefaultAggregationPeriodKeySchemeTest {
 		assertEquals(ap.getZone(), ZoneId.of("Australia/Melbourne"));
 		assertEquals(1, ap.getAmount());
 		assertEquals(AggregationPeriodUnit.YEAR, ap.getUnit());
+
+		testRoundTrip(hapks.generateKey(APC_30MIN_MEL, LocalDateTime.now()));
+		testRoundTrip(hapks.generateKey(APC_15MIN_MEL, LocalDateTime.now()));
+		testRoundTrip(hapks.generateKey(APC_20MIN_MEL, LocalDateTime.now()));
+		testRoundTrip(hapks.generateKey(APC_5MIN_MEL, LocalDateTime.now()));
+		testRoundTrip(hapks.generateKey(APC_6MONTH_MEL, LocalDateTime.now()));
+		testRoundTrip(hapks.generateKey(APC_5YEAR_MEL, LocalDateTime.now()));
 
 	}
 
