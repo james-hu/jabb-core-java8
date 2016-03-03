@@ -30,9 +30,32 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 	protected AggregationPeriodHierarchy<?> aph;
 
 	protected DefaultAggregationPeriodKeyScheme(AggregationPeriodHierarchy<?> aggregationPeriodHierarchy){
+		aggregationPeriodHierarchy.codeMapping.values().stream()
+			.map(node->node.aggregationPeriodAndAttachment.aggregationPeriod).forEach(ap->{
+				validateAggregationPeriod(ap);
+			});
 		this.aph = aggregationPeriodHierarchy;
 	}
 	
+	/**
+	 * Validate aggregation period.
+	 * It ensures that the following units can only have 1 as amount: YEAR_MONTH_DAY, WEEK_BASED_YEAR_WEEK, YEAR_WEEK_ISO, YEAR_WEEK_SUNDAY_START
+	 * @param ap	the aggregation period to be validated.
+	 */
+	static protected void validateAggregationPeriod(AggregationPeriod ap){
+		switch(ap.unit){
+			case YEAR_MONTH_DAY:
+			case WEEK_BASED_YEAR_WEEK:
+			case YEAR_WEEK_ISO:
+			case YEAR_WEEK_SUNDAY_START:
+				if (ap.amount != 1){
+					throw new IllegalArgumentException("Aggregation periods with " + ap.unit + " as unit can only have 1 as amount: " + ap.amount);
+				}
+				break;
+			default:
+				// do nothing
+		}
+	}
 	
 	@Override
 	public String generateKey(String apCode, int year, int month, int dayOfMonth, int hour, int minute) {
@@ -61,7 +84,7 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 			case YEAR:
 				return toString(apCode, year - year % ap.amount, 4);
 			case YEAR_MONTH:
-				return toString(apCode, year*100 + month - month % ap.amount, 6);
+				return toString(apCode, year*100 + month - ((month - 1) % ap.amount), 6);
 			case YEAR_MONTH_DAY:
 				return toString(apCode, year*10000 + month * 100 + dayOfMonth, 8);	// amount must be 1
 			case YEAR_MONTH_DAY_HOUR:
@@ -380,6 +403,8 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 	 * @return		a AggregationPeriodKeyScheme specific to the aggregation period 
 	 */
 	static public AggregationPeriodKeyScheme newInstance(AggregationPeriod ap){
+		validateAggregationPeriod(ap);
+
 		return new AggregationPeriodKeyScheme(){
 
 			@Override

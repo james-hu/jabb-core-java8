@@ -27,6 +27,8 @@ public class DefaultAggregationPeriodKeySchemeTest {
 	
 	static String APC_1MIN = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE);
 	static String APC_1MONTH = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR_MONTH);
+	static String APC_2MONTH = AggregationPeriod.getCodeName(2, AggregationPeriodUnit.YEAR_MONTH);
+	static String APC_3MONTH = AggregationPeriod.getCodeName(3, AggregationPeriodUnit.YEAR_MONTH);
 	static String APC_1YEAR = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR);
 
 	static String APC_1MIN_MEL = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ZoneId.of("Australia/Melbourne"));
@@ -64,6 +66,31 @@ public class DefaultAggregationPeriodKeySchemeTest {
 			aph.add(APC_1WEEK_BASED_YEAR_WEEK, APC_1WEEK_BASED_YEAR);
 		
 		hapks = new DefaultAggregationPeriodKeyScheme(aph);
+	}
+	
+	@Test
+	public void testMonth(){
+		AggregationPeriodHierarchy<?> aph;
+		aph = new AggregationPeriodHierarchy<>();
+		aph.add(APC_1MIN);
+			aph.add(APC_1MIN, APC_1MONTH);
+				aph.add(APC_1MONTH, APC_2MONTH);
+				aph.add(APC_1MONTH, APC_3MONTH);
+
+		HierarchicalAggregationPeriodKeyScheme hapks;
+		hapks = new DefaultAggregationPeriodKeyScheme(aph);
+
+		LocalDateTime ldt = LocalDateTime.parse("201503121703", DateTimeFormatter.ofPattern("uuuuMMddHHmm"));
+		
+		assertEquals(APC_1MONTH + "201503", hapks.generateKey(APC_1MONTH, ldt));
+		assertEquals(APC_2MONTH + "201503", hapks.generateKey(APC_2MONTH, ldt));
+		assertEquals(APC_3MONTH + "201501", hapks.generateKey(APC_3MONTH, ldt));
+		
+		assertEquals(APC_2MONTH + "201505", hapks.nextKey(APC_2MONTH + "201503"));
+		assertEquals(APC_2MONTH + "201501", hapks.previousKey(APC_2MONTH + "201503"));
+
+		assertEquals(APC_3MONTH + "201507", hapks.nextKey(APC_3MONTH + "201504"));
+		assertEquals(APC_3MONTH + "201501", hapks.previousKey(APC_3MONTH + "201504"));
 	}
 	
 	@Test
