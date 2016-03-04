@@ -512,7 +512,10 @@ public class DefaultTransactionalStreamDataBatchProcessing<M> implements Transac
 					throw new Exception("Unable to initilize processor");
 				}
 				long receiveTimeoutMillis = batchProcessor.receive(context, null);	// keep it for logging
-				receiveStatus = supplierWithIdAndRange.receiveInRange(msg->batchProcessor.receive(context, msg), transaction.getStartPosition());
+				receiveStatus = supplierWithIdAndRange.receiveInRange(msg->{
+						long remaining = batchProcessor.receive(context, msg);
+						return state.get() == State.RUNNING ? remaining : 0;
+					}, transaction.getStartPosition());
 				fetchedLastPosition = receiveStatus.getLastPosition();
 				if (fetchedLastPosition != null){
 					if (isInitiallyOpenRange){  // we need to close the open range
