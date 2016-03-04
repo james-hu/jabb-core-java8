@@ -471,7 +471,7 @@ public class DefaultTransactionalStreamDataBatchProcessing<M> implements Transac
 									outOfRangeReached[partition] = true;
 								}
 							} catch (Exception e) {
-								logger.warn("[{}] Processor {} ailed to get recent transactions", seriesId, processorId, e);
+								logger.warn("[{}] Processor {} failed to get recent transactions", seriesId, processorId, e);
 							}
 						}
 					}else{ // can't get a transaction
@@ -515,7 +515,7 @@ public class DefaultTransactionalStreamDataBatchProcessing<M> implements Transac
 				receiveStatus = supplierWithIdAndRange.receiveInRange(msg->{
 						long remaining = batchProcessor.receive(context, msg);
 						return state.get() == State.RUNNING ? remaining : 0;
-					}, transaction.getStartPosition());
+					}, transaction.getStartPosition(), transaction.getEndPosition());
 				fetchedLastPosition = receiveStatus.getLastPosition();
 				if (fetchedLastPosition != null){
 					if (isInitiallyOpenRange){  // we need to close the open range
@@ -534,7 +534,10 @@ public class DefaultTransactionalStreamDataBatchProcessing<M> implements Transac
 					succeeded = batchProcessor.finish(context);
 				}else{
 					if (logger.isDebugEnabled()){
-						logDebugInTransaction("Fetched nothing within " + DurationFormatter.format(receiveTimeoutMillis), context, fetchedLastPosition);
+						logDebugInTransaction("Fetched nothing within " + DurationFormatter.format(receiveTimeoutMillis), context, fetchedLastPosition, receiveStatus.isOutOfRangeReached());
+					}
+					if (receiveStatus.isOutOfRangeReached()){		// all data in range had been purged
+						succeeded = batchProcessor.finish(context);
 					}
 				}
 			}catch(Exception e){
@@ -584,6 +587,13 @@ public class DefaultTransactionalStreamDataBatchProcessing<M> implements Transac
 			logger.debug("[{} - {}] " + message + ": transactionId={}, startPosition={}, endPosition={}, fetchedLastPosition={}", 
 					context.seriesId, processorId, transaction.getTransactionId(), transaction.getStartPosition(), transaction.getEndPosition(), 
 					fetchedLastPosition);
+		}
+		
+		protected void logDebugInTransaction(String message, ProcessingContextImpl context, String fetchedLastPosition, boolean isOutOfRangeReached){
+			SequentialTransaction transaction = context.transaction;
+			logger.debug("[{} - {}] " + message + ": transactionId={}, startPosition={}, endPosition={}, fetchedLastPosition={}, isOutOfRangeReached={}", 
+					context.seriesId, processorId, transaction.getTransactionId(), transaction.getStartPosition(), transaction.getEndPosition(), 
+					fetchedLastPosition, isOutOfRangeReached);
 		}
 	}
 	

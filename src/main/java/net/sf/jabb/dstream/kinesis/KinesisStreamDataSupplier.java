@@ -604,6 +604,11 @@ public class KinesisStreamDataSupplier<M> implements StreamDataSupplier<M> {
 		return receive(receiver, startPosition, record->isInRange(record.getApproximateArrivalTimestamp().toInstant(), endEnqueuedTime));
 	}
 	
+	@Override
+	public ReceiveStatus receive(Function<M, Long> receiver, Instant startEnqueuedTime, String endPosition) throws DataStreamInfrastructureException {
+		throw new UnsupportedOperationException("Receiving by startEnqueuedTime is not supported by Kinesis");
+	}
+	
 
 
 	@Override

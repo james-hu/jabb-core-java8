@@ -266,6 +266,12 @@ public class MockedStreamDataSupplier implements StreamDataSupplier<String> {
 	}
 
 	@Override
+	public ReceiveStatus receive(Function<String, Long> receiver, Instant startEnqueuedTime, String endPosition)
+			throws DataStreamInfrastructureException {
+		return receive(receiver, String.valueOf(startEnqueuedTime.toEpochMilli()), endPosition);
+	}
+
+	@Override
 	public void start() throws Exception {
 	}
 
