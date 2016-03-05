@@ -452,7 +452,7 @@ public class DefaultTransactionalStreamDataBatchProcessing<M> implements Transac
 					
 					if (transaction != null && transaction.hasStarted() && state.get() == State.RUNNING){
 						if (logger.isDebugEnabled()){
-							logger.debug("[{}] Processor {} got a {} transaction {} [{}-{}] after {} attempts: {}", 
+							logger.debug("[{}] Processor {} got a {} transaction {} ({}-{}] after {} attempts: {}", 
 									seriesId,
 									processorId,
 									(transaction.getAttempts() == 1 ? "new" : "failed"),

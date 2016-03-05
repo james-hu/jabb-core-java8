@@ -40,12 +40,15 @@ public class StreamDataSupplierWithIdAndEnqueuedTimeRange<M> extends SimpleStrea
 			if (endPosition == null || endPosition.length() == 0){
 				return supplier.receive(receiver, fromEnqueuedTime, toEnqueuedTime);
 			}else{
+				// TODO: out of range checking for endPosition
 				return supplier.receive(receiver, fromEnqueuedTime, endPosition);
 			}
 		}else{
 			if (endPosition == null || endPosition.length() == 0){
+				// TODO: out of range checking for startPosition
 				return supplier.receive(receiver, startPosition, toEnqueuedTime);
 			}else{
+				// TODO: out of range checking for startPosition and endPosition
 				return supplier.receive(receiver, startPosition, endPosition);
 			}
 		}
