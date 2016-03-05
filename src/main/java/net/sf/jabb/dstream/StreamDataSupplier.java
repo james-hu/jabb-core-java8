@@ -267,6 +267,18 @@ public interface StreamDataSupplier<M> {
 	ReceiveStatus receive(Function<M, Long> receiver, String startPosition, Instant endEnqueuedTime) throws DataStreamInfrastructureException;
 	
 	/**
+	 * Synchronously receive data/messages starting from an enqueued time and ending before another enqueued time.
+	 * The method of the receiver will be called from the calling thread of this method.
+	 * @param receiver			The receiver which accepts one message each time and return number of milliseconds left for receiving remaining next message
+	 * 							If the receiver receives a null as input, it should ignore it but still return the correct number of milliseconds left.
+	 * @param startEnqueuedTime		the start enqueued time of the message/data, inclusive/exclusive defined by the implementation
+	 * @param endPosition		the end position, inclusive/exclusive defined by the implementation
+	 * @return	ReceiveStatus with position of the last message received or null if no message had been received
+	 * @throws DataStreamInfrastructureException	if any error happened
+	 */
+	ReceiveStatus receive(Function<M, Long> receiver, Instant startEnqueuedTime, String endPosition) throws DataStreamInfrastructureException;
+	
+	/**
 	 * Start/activate/connect to the data stream
 	 * @throws Exception any exception
 	 */
@@ -286,5 +298,5 @@ public interface StreamDataSupplier<M> {
 	default StreamDataSupplierWithId<M> withId(String id){
 		return new SimpleStreamDataSupplierWithId<>(id, this);
 	}
-	
+
 }

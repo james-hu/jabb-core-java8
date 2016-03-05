@@ -244,4 +244,11 @@ abstract public class JmsConsumerStreamDataSupplier<M> implements StreamDataSupp
 				message -> endEnqueuedTime != null && !isInRange(enqueuedTime(message), endEnqueuedTime));
 	}
 
+	@Override
+	public ReceiveStatus receive(Function<M, Long> receiver, Instant startEnqueuedTime, String endPosition) 
+			throws DataStreamInfrastructureException{
+		return receive(receiver, messageSelector(startEnqueuedTime), 
+				message -> endPosition != null && !isInRange(position(message), endPosition));
+	}
+
 }

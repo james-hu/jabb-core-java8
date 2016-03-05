@@ -215,6 +215,12 @@ public class KafkaStreamDataSupplier<M> implements StreamDataSupplier<M> {
 	}
 
 	@Override
+	public ReceiveStatus receive(Function<M, Long> receiver, Instant startEnqueuedTime, String endPosition)
+			throws DataStreamInfrastructureException {
+		throw new DataStreamInfrastructureException("Kafka do not support Receive with start/end enqueue time");
+	}
+
+	@Override
 	public void start() throws Exception {
 		return;
 	}

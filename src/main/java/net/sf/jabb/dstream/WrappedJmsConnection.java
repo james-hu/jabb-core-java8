@@ -140,6 +140,33 @@ public class WrappedJmsConnection implements Connection {
 	}
 	
 	/**
+	 * Check if the exception is caused by connection closed/shutdown
+	 * @param exception		the IllegalStateException
+	 * @return		true if the exception is caused by connection closed/shutdown, false otherwise.
+	 */
+	protected boolean isConnectionClosed(IllegalStateException exception){
+		if ("Cannot create a session on a closed connection".equals(exception.getMessage())){
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Check if the exception is caused by connection closed/shutdown
+	 * @param exception		the exception
+	 * @return		true if the exception is caused by connection closed/shutdown, false otherwise.
+	 */
+	protected boolean isConnectionClosed(Exception exception){
+		if (exception instanceof JMSException){
+			return isConnectionClosed((JMSException)exception);
+		}
+		if (exception instanceof IllegalStateException){
+			return isConnectionClosed((IllegalStateException)exception);
+		}
+		return false;
+	}
+	
+	/**
 	 * Establish or re-establish connection in case it has been closed.
 	 * It is thread-safe and has backoff between attempts.
 	 * @return  true if a new connection established within this invocation, false otherwise
@@ -299,7 +326,7 @@ public class WrappedJmsConnection implements Connection {
 		}
 		try{
 			return getConnection().createSession(transacted, acknowledgeMode);
-		}catch(JMSException e){
+		}catch(JMSException|IllegalStateException e){
 			if (isConnectionClosed(e)){  // Event Hub closed the connection
 				if (establishConnection(false)){
 					return getConnection().createSession(transacted, acknowledgeMode);

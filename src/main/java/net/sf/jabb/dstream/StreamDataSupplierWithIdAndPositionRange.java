@@ -34,12 +34,14 @@ public class StreamDataSupplierWithIdAndPositionRange<M> extends SimpleStreamDat
 	}
 	
 	@Override
-	public ReceiveStatus receiveInRange(Function<M, Long> receiver, String startPosition) throws DataStreamInfrastructureException {
-		if (startPosition == null || startPosition.length() == 0){
-			return supplier.receive(receiver, startPosition, toPosition);
-		}else{
-			return supplier.receive(receiver, startPosition, toPosition);
+	public ReceiveStatus receiveInRange(Function<M, Long> receiver, String startPosition, String endPosition) throws DataStreamInfrastructureException {
+		if (startPosition == null || startPosition.length() == 0 || supplier.isInRange(startPosition, fromPosition)){
+			startPosition = fromPosition;
 		}
+		if (endPosition == null || endPosition.length() == 0 || supplier.isInRange(toPosition, endPosition)){
+			endPosition = toPosition;
+		}
+		return supplier.receive(receiver, startPosition, endPosition);
 	}
 
 	@Override

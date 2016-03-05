@@ -17,10 +17,11 @@ public interface StreamDataSupplierWithIdAndRange<M, R> extends StreamDataSuppli
 	 * Receive data from the supplier within range. Reference: {@link StreamDataSupplier#receive(Function, String, java.time.Instant)}
 	 * @param receiver	the receiver
 	 * @param startPosition	the start position for the receiving, if it is null or empty string then the from position of the range will be used
+	 * @param endPosition	the end position for the receiving, if it is null or empty string then the to position of the range will be used
 	 * @return	the receive status
 	 * @throws DataStreamInfrastructureException  if exception happens in the infrastructure
 	 */
-	ReceiveStatus receiveInRange(Function<M, Long> receiver, String startPosition) throws DataStreamInfrastructureException;
+	ReceiveStatus receiveInRange(Function<M, Long> receiver, String startPosition, String endPosition) throws DataStreamInfrastructureException;
 
 	/**
 	 * Get the from 

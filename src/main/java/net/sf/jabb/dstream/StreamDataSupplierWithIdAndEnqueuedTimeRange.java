@@ -35,11 +35,22 @@ public class StreamDataSupplierWithIdAndEnqueuedTimeRange<M> extends SimpleStrea
 	}
 	
 	@Override
-	public ReceiveStatus receiveInRange(Function<M, Long> receiver, String startPosition) throws DataStreamInfrastructureException {
+	public ReceiveStatus receiveInRange(Function<M, Long> receiver, String startPosition, String endPosition) throws DataStreamInfrastructureException {
 		if (startPosition == null || startPosition.length() == 0){
-			return supplier.receive(receiver, fromEnqueuedTime, toEnqueuedTime);
+			if (endPosition == null || endPosition.length() == 0){
+				return supplier.receive(receiver, fromEnqueuedTime, toEnqueuedTime);
+			}else{
+				// TODO: out of range checking for endPosition
+				return supplier.receive(receiver, fromEnqueuedTime, endPosition);
+			}
 		}else{
-			return supplier.receive(receiver, startPosition, toEnqueuedTime);
+			if (endPosition == null || endPosition.length() == 0){
+				// TODO: out of range checking for startPosition
+				return supplier.receive(receiver, startPosition, toEnqueuedTime);
+			}else{
+				// TODO: out of range checking for startPosition and endPosition
+				return supplier.receive(receiver, startPosition, endPosition);
+			}
 		}
 	}
 	
