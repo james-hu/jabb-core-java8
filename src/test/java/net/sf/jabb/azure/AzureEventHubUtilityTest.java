@@ -22,12 +22,14 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import com.microsoft.azure.storage.Constants;
 import com.microsoft.azure.storage.RequestOptions;
 import com.microsoft.azure.storage.ServiceClient;
 import com.microsoft.azure.storage.StorageCredentialsAccountAndKey;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.StorageUri;
 import com.microsoft.azure.storage.core.SharedAccessSignatureHelper;
+import com.microsoft.azure.storage.core.Utility;
 import com.microsoft.azure.storage.queue.SharedAccessQueuePolicy;
 
 /**
@@ -73,15 +75,20 @@ public class AzureEventHubUtilityTest {
 				policy, 
 				policyName, 
 				URLEncoder.encode(uriString, "UTF-8").toLowerCase(), 
-				client,
-				null);
+				null,
+				null,
+				client);
 		
 		DateTimeFormatter iso8601Formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).withZone(ZoneId.of("UTC"));
-		String stringToSign = "\n\n"
-				+ iso8601Formatter.format(expiration) + "\n"
-				+ uriString + "\n"
-				+ policyName + "\n"
-				+ "2014-02-14";
+		String stringToSign = 
+				"\n"											// permissions == null ? Constants.EMPTY_STRING : permissions
+				+ "\n"											// Utility.getUTCTimeOrEmpty(startTime)
+				+ iso8601Formatter.format(expiration) + "\n"	// Utility.getUTCTimeOrEmpty(expiryTime)
+				+ uriString + "\n"								// resource
+				+ policyName + "\n"								// accessPolicyIdentifier == null ? Constants.EMPTY_STRING : accessPolicyIdentifier
+				+ "\n"											// ipRange == null ? Constants.EMPTY_STRING : ipRange.toString()
+				+ "\n"											// protocols == null ? Constants.EMPTY_STRING : protocols.toString()
+				+ "2015-04-05";									// Constants.HeaderConstants.TARGET_STORAGE_VERSION
 		
 		byte[] keyBytes = Base64.getDecoder().decode(policyKey);
 		String result = AzureEventHubUtility.generateSharedAccessSignature(stringToSign, keyBytes);
