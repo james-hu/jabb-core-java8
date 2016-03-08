@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * The forest structure of AggregationPeriod nodes.
@@ -280,6 +281,36 @@ public class AggregationPeriodHierarchy<T> implements Serializable{
 	 */
 	public Collection<AggregationPeriodAndAttachment<T>> getRootsWithAttachments(){
 		return roots.values();
+	}
+	
+	/**
+	 * Get all aggregation periods across all levels.
+	 * The result is not sorted.
+	 * @return	all aggregation periods
+	 */
+	public Set<AggregationPeriod> getAll(){
+		return codeMapping.values().stream()
+				.map(node->node.aggregationPeriodAndAttachment.getAggregationPeriod())
+				.collect(Collectors.toSet());
+	}
+	
+	/**
+	 * Get all aggregation periods with attachments across all levels.
+	 * The result is not sorted.
+	 * @return	all aggregation periods with attachments
+	 */
+	public Collection<AggregationPeriodAndAttachment<T>> getAllWithAttachments(){
+		return codeMapping.values().stream()
+				.map(node->node.aggregationPeriodAndAttachment)
+				.collect(Collectors.toSet());
+	}
+	
+	/**
+	 * Get the number of aggregation periods contained in the hierarchy
+	 * @return	number of aggregation periods
+	 */
+	public int size(){
+		return codeMapping.size();
 	}
 	
 	/**
