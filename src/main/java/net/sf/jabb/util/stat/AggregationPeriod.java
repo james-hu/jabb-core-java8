@@ -71,7 +71,7 @@ public class AggregationPeriod implements Serializable, Comparable<AggregationPe
 	}
 	
 	/**
-	 * Parse strings like '1 hour', '2 days', '3 Years', '12 minute' into AggregationPeriod.
+	 * Parse strings like '1 hour', '2 days', '3 Years', '12 minute', '5day' into AggregationPeriod.
 	 * Short formats like '1H', '2 D', '3y' are also supported.
 	 * @param amountAndUnit	the string to be parsed
 	 * @param zone  the time zone
@@ -85,9 +85,9 @@ public class AggregationPeriod implements Serializable, Comparable<AggregationPe
 			AggregationPeriodUnit unit = AggregationPeriodUnit.parse(trimed.charAt(trimed.length() - 1));
 			return new AggregationPeriod(amount, unit, zone);
 		}else{
-			String[] durationAndUnit = StringUtils.split(trimed);
-			int amount = Integer.valueOf(durationAndUnit[0]);
-			AggregationPeriodUnit unit = AggregationPeriodUnit.parse(durationAndUnit[1]);
+			int firstNonNumeric = indexOfFirstNonNumeric(trimed);
+			int amount = Integer.valueOf(trimed.substring(0, firstNonNumeric));
+			AggregationPeriodUnit unit = AggregationPeriodUnit.parse(trimed.substring(firstNonNumeric).trim());
 			return new AggregationPeriod(amount, unit, zone);
 		}
 	}
@@ -141,6 +141,24 @@ public class AggregationPeriod implements Serializable, Comparable<AggregationPe
 		return i;
 	}
 
+	protected static int indexOfFirstNonNumeric(String s){
+		return indexOfFirstNonNumeric(s, 0);
+	}
+	protected static int indexOfFirstNonNumeric(String s, int startIndex){
+		if (s == null || s.length() == 0){
+			return 0;
+		}
+
+		int i = startIndex;
+		for (; i < s.length(); i ++){
+			char c = s.charAt(i);
+			if (c < '0' || c > '9'){
+				break;
+			}
+		}
+		return i;
+	}
+
 	@Override
 	public boolean equals(Object o){
 		if (o == this){
@@ -178,7 +196,7 @@ public class AggregationPeriod implements Serializable, Comparable<AggregationPe
 	
 	@Override
 	public String toString(){
-		return zone.getId() + "(" + String.valueOf(amount) + " " + unit.toString() + ")";
+		return (zone == null ? "null" : zone.getId()) + "(" + String.valueOf(amount) + " " + unit.toString() + ")";
 	}
 	
 	@JsonIgnore
