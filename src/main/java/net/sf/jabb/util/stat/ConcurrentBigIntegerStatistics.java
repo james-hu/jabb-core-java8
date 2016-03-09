@@ -152,8 +152,14 @@ public class ConcurrentBigIntegerStatistics implements NumberStatistics<BigInteg
 	public BigDecimal getAvg(int scale) {
 		long countValue = count.sum();
 		if (countValue > 0){
-			BigDecimal avg = new BigDecimal(sum.sum(), scale);
-			return avg.divide(new BigDecimal(countValue), BigDecimal.ROUND_HALF_UP);
+			if (getMin().equals(getMax())){
+				BigDecimal avg = new BigDecimal(getMin());
+				avg.setScale(scale);
+				return avg;
+			}else{
+				BigDecimal avg = new BigDecimal(sum.sum());
+				return avg.divide(new BigDecimal(countValue), scale, BigDecimal.ROUND_HALF_UP);
+			}
 		}else{
 			return null;
 		}
