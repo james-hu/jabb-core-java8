@@ -48,6 +48,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
  *
  */
 abstract public class JmsConsumerStreamDataSupplier<M> implements StreamDataSupplier<M>{
+	protected static long MAX_RECEIVE_TIMEOUT = 60_000L;	// 1 minute (maybe we should make this configurable later)
 	
 	protected static TimeLimiter timeLimiter = new SimpleTimeLimiter(
 			new ThreadPoolExecutor(0, Integer.MAX_VALUE,
@@ -199,7 +200,7 @@ abstract public class JmsConsumerStreamDataSupplier<M> implements StreamDataSupp
 			Message message = null;
 			Message lastMessage = null;
 			while (receiveTimeoutMillis > 0){
-				message = consumer.receive(receiveTimeoutMillis);
+				message = consumer.receive(receiveTimeoutMillis < MAX_RECEIVE_TIMEOUT ? receiveTimeoutMillis : MAX_RECEIVE_TIMEOUT);
 				if (message != null){
 					if (outOfRangeCheck.test(message)){
 						outOfRangeReached = true;
