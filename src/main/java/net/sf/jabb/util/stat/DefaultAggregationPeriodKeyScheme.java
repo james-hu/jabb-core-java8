@@ -443,8 +443,11 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 					}
 					break;
 				case YEAR_MONTH_DAY_HOUR_MINUTE:
-					if (amount == 2 || amount == 4 || amount ==5 || amount == 10 || amount == 20){
+					if (amount == 2 || amount == 4 || amount ==5){
 						compressed = x / amount;
+					}else if (amount == 10 || amount == 20){
+						compressed = x / amount;
+						numberLength --;
 					}else if (amount >= 6){
 						compressed = (x / 100) * 10 + (x % 100) / amount; // reduced 1 digit (60/6=10)
 						numberLength --;

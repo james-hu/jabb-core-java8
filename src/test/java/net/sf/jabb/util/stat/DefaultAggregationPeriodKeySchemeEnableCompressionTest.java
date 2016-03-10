@@ -33,6 +33,7 @@ public class DefaultAggregationPeriodKeySchemeEnableCompressionTest {
 
 	static String APC_1MIN_MEL = AggregationPeriod.getCodeName(1, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ZoneId.of("Australia/Melbourne"));
 	static String APC_5MIN_MEL = AggregationPeriod.getCodeName(5, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ZoneId.of("Australia/Melbourne"));
+	static String APC_10MIN_MEL = AggregationPeriod.getCodeName(10, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ZoneId.of("Australia/Melbourne"));
 	static String APC_15MIN_MEL = AggregationPeriod.getCodeName(15, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ZoneId.of("Australia/Melbourne"));
 	static String APC_20MIN_MEL = AggregationPeriod.getCodeName(20, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ZoneId.of("Australia/Melbourne"));
 	static String APC_30MIN_MEL = AggregationPeriod.getCodeName(30, AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ZoneId.of("Australia/Melbourne"));
@@ -211,6 +212,7 @@ public class DefaultAggregationPeriodKeySchemeEnableCompressionTest {
 			aph.add(APC_1MIN_MEL, APC_1MONTH_MEL);
 			aph.add(APC_1MIN_MEL, APC_5MIN_MEL);
 				aph.add(APC_5MIN_MEL, APC_15MIN_MEL);
+				aph.add(APC_5MIN_MEL, APC_10MIN_MEL);
 				aph.add(APC_5MIN_MEL, APC_20MIN_MEL);
 				aph.add(APC_15MIN_MEL, APC_30MIN_MEL);
 				aph.add(APC_1MONTH_MEL, APC_1YEAR_MEL);
@@ -226,6 +228,33 @@ public class DefaultAggregationPeriodKeySchemeEnableCompressionTest {
 		assertEquals(1, ap.getAmount());
 		assertEquals(AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ap.getUnit());
 		
+		ap = hapks.retrieveAggregationPeriod("ok5N40320620048");
+		assertNotNull(ap);
+		assertEquals(ap.getZone(), ZoneId.of("Australia/Melbourne"));
+		assertEquals(5, ap.getAmount());
+		assertEquals(AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ap.getUnit());
+		
+		assertEquals(LocalDateTime.of(2016, 3, 10, 2, 40), hapks.getStartTime("ok5N040320620048"));
+		assertEquals("ok5N040320620049", hapks.generateKey(ap, LocalDateTime.of(2016, 3, 10, 2, 45)));
+
+		ap = hapks.retrieveAggregationPeriod("ok10N20160303102");
+		assertNotNull(ap);
+		assertEquals(ap.getZone(), ZoneId.of("Australia/Melbourne"));
+		assertEquals(10, ap.getAmount());
+		assertEquals(AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ap.getUnit());
+		
+		assertEquals(LocalDateTime.of(2016, 3, 3, 10, 20), hapks.getStartTime("ok10N20160303102"));
+		assertEquals("ok10N20160303103", hapks.generateKey(ap, LocalDateTime.of(2016, 3, 3, 10, 30)));
+
+		ap = hapks.retrieveAggregationPeriod("ok15N20160303101");
+		assertNotNull(ap);
+		assertEquals(ap.getZone(), ZoneId.of("Australia/Melbourne"));
+		assertEquals(15, ap.getAmount());
+		assertEquals(AggregationPeriodUnit.YEAR_MONTH_DAY_HOUR_MINUTE, ap.getUnit());
+		
+		assertEquals(LocalDateTime.of(2016, 3, 3, 10, 15), hapks.getStartTime("ok15N20160303101"));
+		assertEquals("ok15N20160303102", hapks.generateKey(ap, LocalDateTime.of(2016, 3, 3, 10, 30)));
+
 		ap = hapks.retrieveAggregationPeriod("ok1M201603");
 		assertNotNull(ap);
 		assertEquals(ap.getZone(), ZoneId.of("Australia/Melbourne"));
