@@ -63,10 +63,19 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 	}
 	
 	@Override
+	public long generateKeyNumber(String apCode, int year, int month, int dayOfMonth, int hour, int minute) {
+		return generateKeyNumber(aph.get(apCode), year, month, dayOfMonth, hour, minute);
+	}
+	
+	@Override
 	public String generateKey(AggregationPeriod ap, int year, int month, int dayOfMonth, int hour, int minute) {
 		return staticGenerateKey(ap, year, month, dayOfMonth, hour, minute, enableCompression);
 	}
 	
+	@Override
+	public long generateKeyNumber(AggregationPeriod ap, int year, int month, int dayOfMonth, int hour, int minute) {
+		return staticGenerateKeyNumber(ap, year, month, dayOfMonth, hour, minute, enableCompression) >> 5;
+	}
 	
 	@Override
 	public String generateKey(String apCode, LocalDateTime dateTimeWithoutZone) {
@@ -74,56 +83,118 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 	}
 		
 	@Override
+	public long generateKeyNumber(String apCode, LocalDateTime dateTimeWithoutZone) {
+		return generateKeyNumber(aph.get(apCode), dateTimeWithoutZone);
+	}
+		
+	@Override
 	public String generateKey(AggregationPeriod ap, LocalDateTime dateTimeWithoutZone){
 		return staticGenerateKey(ap, dateTimeWithoutZone, enableCompression);
 	}
 	
-	static protected String staticGenerateKey(AggregationPeriod ap, int year, int month, int dayOfMonth, int hour, int minute, boolean enableCompression) {
+	@Override
+	public long generateKeyNumber(AggregationPeriod ap, LocalDateTime dateTimeWithoutZone){
+		return staticGenerateKeyNumber(ap, dateTimeWithoutZone, enableCompression) >> 5;
+	}
+	
+	@Override
+	public String generateKey(AggregationPeriod ap, long keyNumber){
+		return staticGenerateKey(ap, keyNumber, enableCompression);
+	}
+	
+	@Override
+	public String generateKey(String apCode, long keyNumber){
+		return staticGenerateKey(aph.get(apCode), keyNumber, enableCompression);
+	}
+	
+
+	
+	@Override
+	public int getKeyNumberLength(AggregationPeriod ap){
+		return staticGetKeyNumberLength(ap, enableCompression);
+	}
+
+	@Override
+	public int getKeyNumberLength(String apCode){
+		return staticGetKeyNumberLength(aph.get(apCode), enableCompression);
+	}
+
+
+	static protected int staticGetKeyNumberLength(AggregationPeriod ap, boolean enableCompression){
 		switch(ap.unit){
 			case YEAR:
-				return toString(enableCompression, ap, year - year % ap.amount, 4);
+			case WEEK_BASED_YEAR:
+				return 4;
 			case YEAR_MONTH:
-				return toString(enableCompression, ap, year*100 + month - ((month - 1) % ap.amount), 6);
+				return enableCompression & ap.amount > 1 ? 5 : 6;
+			case WEEK_BASED_YEAR_WEEK:
+			case YEAR_WEEK_ISO:
+			case YEAR_WEEK_SUNDAY_START:
+				return 6;
 			case YEAR_MONTH_DAY:
-				return toString(enableCompression, ap, year*10000 + month * 100 + dayOfMonth, 8);	// amount must be 1
+				return 8;
 			case YEAR_MONTH_DAY_HOUR:
-				return toString(enableCompression, ap, year*1000000L + month * 10000 + dayOfMonth * 100 + hour - hour % ap.amount, 10);
+				return enableCompression & ap.amount > 2 ? 9 : 10;
 			case YEAR_MONTH_DAY_HOUR_MINUTE:
-				return toString(enableCompression, ap, year*100000000L + month * 1000000 + dayOfMonth * 10000 + hour * 100 + minute - minute % ap.amount, 12);
+				return enableCompression & (ap.amount == 10 || ap.amount == 20 || ap.amount >= 6) ? 11 : 12;
 			default:
-				/*	
-				case WEEK_BASED_YEAR:
-				case WEEK_BASED_YEAR_WEEK:
-				case YEAR_WEEK_ISO:
-				case YEAR_WEEK_SUNDAY_START:
-				*/
-				return staticGenerateKey(ap, LocalDateTime.of(year, month, dayOfMonth, hour, minute), enableCompression);
+				throw new IllegalArgumentException("Unknown aggregation period: " + ap);
+		}
+	}
+	
+	static protected long staticGenerateKeyNumber(AggregationPeriod ap, int year, int month, int dayOfMonth, int hour, int minute, boolean enableCompression) {
+		switch(ap.unit){
+			case YEAR:
+				return compress(enableCompression, ap, year - year % ap.amount, 4);
+			case YEAR_MONTH:
+				return compress(enableCompression, ap, year*100 + month - ((month - 1) % ap.amount), 6);
+			case YEAR_MONTH_DAY:
+				return compress(enableCompression, ap, year*10000 + month * 100 + dayOfMonth, 8);	// amount must be 1
+			case YEAR_MONTH_DAY_HOUR:
+				return compress(enableCompression, ap, year*1000000L + month * 10000 + dayOfMonth * 100 + hour - hour % ap.amount, 10);
+			case YEAR_MONTH_DAY_HOUR_MINUTE:
+				return compress(enableCompression, ap, year*100000000L + month * 1000000 + dayOfMonth * 10000 + hour * 100 + minute - minute % ap.amount, 12);
+			default:
+				return staticGenerateKeyNumber(ap, year, month, dayOfMonth, hour, minute, enableCompression);
 		}
 	}
 
-	static protected String staticGenerateKey(AggregationPeriod ap, LocalDateTime dateTimeWithoutZone, boolean enableCompression){
+	static protected long staticGenerateKeyNumber(AggregationPeriod ap, LocalDateTime dateTimeWithoutZone, boolean enableCompression){
 		int year;
 		int week;
 		switch(ap.unit){
 			case WEEK_BASED_YEAR:
 				year = dateTimeWithoutZone.get(IsoFields.WEEK_BASED_YEAR);
-				return toString(enableCompression, ap, year - year % ap.amount, 4);
+				return compress(enableCompression, ap, year - year % ap.amount, 4);
 			case WEEK_BASED_YEAR_WEEK:
 				year = dateTimeWithoutZone.get(IsoFields.WEEK_BASED_YEAR);
 				week = dateTimeWithoutZone.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
-				return toString(enableCompression, ap, year*100 + week, 6);		// amount must be 1
+				return compress(enableCompression, ap, year*100 + week, 6);		// amount must be 1
 			case YEAR_WEEK_ISO:
 				year = dateTimeWithoutZone.getYear();
 				week = dateTimeWithoutZone.get(WeekFields.ISO.weekOfYear());
-				return toString(enableCompression, ap, year*100 + week, 6);		// amount must be 1
+				return compress(enableCompression, ap, year*100 + week, 6);		// amount must be 1
 			case YEAR_WEEK_SUNDAY_START:
 				year = dateTimeWithoutZone.getYear();
 				week = dateTimeWithoutZone.get(WeekFields.SUNDAY_START.weekOfYear());
-				return toString(enableCompression, ap, year*100 + week, 6);		// amount must be 1
+				return compress(enableCompression, ap, year*100 + week, 6);		// amount must be 1
 			default:
-				return staticGenerateKey(ap, dateTimeWithoutZone.getYear(), dateTimeWithoutZone.getMonthValue(), dateTimeWithoutZone.getDayOfMonth(), 
+				return staticGenerateKeyNumber(ap, dateTimeWithoutZone.getYear(), dateTimeWithoutZone.getMonthValue(), dateTimeWithoutZone.getDayOfMonth(), 
 						dateTimeWithoutZone.getHour(), dateTimeWithoutZone.getMinute(), enableCompression);
 		}
+	}
+	
+	static protected String staticGenerateKey(AggregationPeriod ap, int year, int month, int dayOfMonth, int hour, int minute, boolean enableCompression) {
+		return toString(ap.getCodeName(), staticGenerateKeyNumber(ap, year, month, dayOfMonth, hour, minute, enableCompression));
+	}
+
+	static protected String staticGenerateKey(AggregationPeriod ap, LocalDateTime dateTimeWithoutZone, boolean enableCompression){
+		return toString(ap.getCodeName(), staticGenerateKeyNumber(ap, dateTimeWithoutZone, enableCompression));
+	}
+	
+	static protected String staticGenerateKey(AggregationPeriod ap, long number, boolean enableCompression){
+		int length = staticGetKeyNumberLength(ap, enableCompression);
+		return toString(ap.getCodeName(), number, length);
 	}
 	
 	/**
@@ -217,7 +288,7 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 			case WEEK_BASED_YEAR_WEEK:
 				sb = new StringBuilder();
 				sb.append(i/100); // year
-				sb.append(toStringWithoutCompression("-W", i % 100, 2)); // week;
+				sb.append(toString("-W", i % 100, 2)); // week;
 				sb.append("-1");
 				return LocalDate.parse(sb.toString(), DateTimeFormatter.ISO_WEEK_DATE).atTime(0, 0);
 			case YEAR_WEEK_ISO:
@@ -248,6 +319,7 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 	 * @param step	step to move forward (if positive) or backward (if negative)
 	 * @param unit	unit of the step
 	 * @param zone	the time zone
+	 * @param enableCompression	whether to apply compression or not
 	 * @return	the first key found that is different form the key at the start point
 	 */
 	protected static String findNextKey(AggregationPeriod ap, String key, int step, TemporalUnit unit, ZoneId zone, boolean enableCompression){
@@ -380,7 +452,63 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 	}
 
 	/**
+	 * Take a non-negative number, possibly transform it to a smaller number according to the aggregation period,
+	 * then convert the result to a fixed-length string format. For internal usage.
+	 * @param useCompression		use compression or not
+	 * @param period				the aggregation period
+	 * @param originalNumber		the number to be converted, must not be negative
+	 * @param numberLength			required length of the number in the returned string, 
+	 * 								if the number is shorter than this length, it will be left padded with '0's
+	 * @return		the string representing the number with possible leading zeros. 
+	 * 				Length of the string may be greater than numberLength+prefix.length() if the number is too large to be fitted within numberLength.
+	 * 				Length of the string may be greater than numberLength+prefix.length() if the transformation of the number makes its length shorter.
+	 */
+	protected static String toString(boolean useCompression, AggregationPeriod period, long originalNumber, int numberLength){
+		long number;
+		if (!useCompression || period.amount == 1){
+			number = originalNumber;
+		}else{
+			number = compress(period, originalNumber);
+			numberLength += (int)number & 0x1F;
+			number >>>= 5;
+		}
+		
+		String str = Long.toString(number);
+	    int len = str.length();
+	    StringBuilder sb = new StringBuilder();
+	    sb.append(period.getCodeName());
+	    for(int i = numberLength; i > len; i--){
+	        sb.append('0');
+	    }
+	    sb.append(str);
+	    return sb.toString();  
+
+	}
+	
+	/**
 	 * Convert a non-negative number to a fixed-length string format. For internal usage.
+	 * @param prefix				the prefix to be appended
+	 * @param number				the potentially compressed form of the key shifted 5 bits towards higher end, and the delta of key length in the lower 5 bits
+	 * @return		the string representing the number with possible leading zeros. 
+	 * 				Length of the string may be greater than numberLength+prefix.length() if the number is too large to be fitted within numberLength.
+	 */
+	protected static String toString(String prefix, long number){
+		int numberLength = (int)number & 0x1F;
+		number >>>= 5;
+		
+		String str = Long.toString(number);
+	    int len = str.length();
+	    StringBuilder sb = new StringBuilder();
+	    sb.append(prefix);
+	    for(int i = numberLength; i > len; i--){
+	        sb.append('0');
+	    }
+	    sb.append(str);
+	    return sb.toString();  
+	}
+	
+
+	 /** Convert a non-negative number to a fixed-length string format. For internal usage.
 	 * @param prefix				the prefix to be appended
 	 * @param nonNegativeNumber		the number to be converted, must not be negative
 	 * @param numberLength			required length of the number in the returned string, 
@@ -388,7 +516,7 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 	 * @return		the string representing the number with possible leading zeros. 
 	 * 				Length of the string may be greater than numberLength+prefix.length() if the number is too large to be fitted within numberLength.
 	 */
-	protected static String toStringWithoutCompression(String prefix, long nonNegativeNumber, int numberLength){
+	protected static String toString(String prefix, long nonNegativeNumber, int numberLength){
 		String str = Long.toString(nonNegativeNumber);
 	    int len = str.length();
 
@@ -400,46 +528,42 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 	    sb.append(str);
 	    return sb.toString();       
 	}
-	
-	/**
-	 * Take a non-negative number, possibly transform it to a smaller number according to the aggregation period,
-	 * then convert the result to a fixed-length string format. For internal usage.
-	 * @param useCompression		use compression or not
-	 * @param period				the aggregation period
-	 * @param nonNegativeNumber		the number to be converted, must not be negative
-	 * @param numberLength			required length of the number in the returned string, 
-	 * 								if the number is shorter than this length, it will be left padded with '0's
-	 * @return		the string representing the number with possible leading zeros. 
-	 * 				Length of the string may be greater than numberLength+prefix.length() if the number is too large to be fitted within numberLength.
-	 * 				Length of the string may be greater than numberLength+prefix.length() if the transformation of the number makes its length shorter.
-	 */
-	protected static String toString(boolean useCompression, AggregationPeriod period, long nonNegativeNumber, int numberLength){
-		if (!useCompression || period.amount == 1){
-			return toStringWithoutCompression(period.getCodeName(), nonNegativeNumber, numberLength);
+
+	protected static long compress(boolean enableCompression, AggregationPeriod ap, long x, int length){
+		if (enableCompression){
+			long compressed = compress(ap, x);
+			return (compressed & 0xFFFFFFFFFFFFFFE0L) | ((((int)compressed & 0x1F) + length) & 0x1F);
 		}else{
-			return toStringWithCompression(period, nonNegativeNumber, numberLength);
+			return (x << 5) | (length & 0x1F);
 		}
 	}
 	
-	protected static String toStringWithCompression(AggregationPeriod period, long x, int numberLength){
-		int amount = period.amount;
+	/**
+	 * Compress the number part of the key
+	 * @param ap	the aggregation period
+	 * @param x		the original form of the key
+	 * @return		the potentially compressed form of the key shifted 5 bits towards higher end, and the delta of key length in the lower 5 bits
+	 */
+	protected static long compress(AggregationPeriod ap, long x){
+		int lengthDelta = 0;
+		int amount = ap.amount;
 		long compressed = x;
 		if (amount != 1){
-			switch(period.unit){
+			switch(ap.unit){
 				case YEAR:
 				case WEEK_BASED_YEAR:
 					compressed = x / amount;
 					break;
 				case YEAR_MONTH:
 					compressed = (x / 100) * 10 + ((x % 100) - 1) / amount; // converted month to 0 based and reduced 1 digit
-					numberLength --;
+					lengthDelta --;
 					break;
 				case YEAR_MONTH_DAY_HOUR:
 					if (amount == 2){
 						compressed = x / amount;
 					}else{
 						compressed = (x / 100) * 10 + (x % 100) / amount; // reduced 1 digit (24/3=8)
-						numberLength --;
+						lengthDelta --;
 					}
 					break;
 				case YEAR_MONTH_DAY_HOUR_MINUTE:
@@ -447,10 +571,10 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 						compressed = x / amount;
 					}else if (amount == 10 || amount == 20){
 						compressed = x / amount;
-						numberLength --;
+						lengthDelta --;
 					}else if (amount >= 6){
 						compressed = (x / 100) * 10 + (x % 100) / amount; // reduced 1 digit (60/6=10)
-						numberLength --;
+						lengthDelta --;
 					}else{	// < 6
 						compressed = (x / 100) * 100 + (x % 100) / amount; 
 					}
@@ -463,18 +587,15 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 					// do nothing
 			}
 		}
-		
-		String str = Long.toString(compressed);
-	    int len = str.length();
-	    StringBuilder sb = new StringBuilder();
-	    sb.append(period.getCodeName());
-	    for(int i = numberLength; i > len; i--){
-	        sb.append('0');
-	    }
-	    sb.append(str);
-	    return sb.toString();  
+		return (compressed << 5) | (lengthDelta & 0x1F);
 	}
 	
+	/**
+	 * Uncompress the number part of the key
+	 * @param ap	the aggregation period
+	 * @param x		potentially compressed form of the number part
+	 * @return		the original form of the number part
+	 */
 	protected static long uncompress(AggregationPeriod ap, long x){
 		if (ap.amount == 1){
 			return x;
@@ -571,8 +692,18 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 			}
 
 			@Override
+			public long generateKeyNumber(int year, int month, int dayOfMonth, int hour, int minute) {
+				return DefaultAggregationPeriodKeyScheme.staticGenerateKeyNumber(ap, year, month, dayOfMonth, hour, minute, enableCompression) >>> 5;
+			}
+
+			@Override
 			public String generateKey(LocalDateTime dateTimeWithoutZone) {
 				return DefaultAggregationPeriodKeyScheme.staticGenerateKey(ap, dateTimeWithoutZone, enableCompression);
+			}
+
+			@Override
+			public long generateKeyNumber(LocalDateTime dateTimeWithoutZone) {
+				return DefaultAggregationPeriodKeyScheme.staticGenerateKeyNumber(ap, dateTimeWithoutZone, enableCompression) >>> 5;
 			}
 
 			@Override
@@ -580,6 +711,17 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 				return DefaultAggregationPeriodKeyScheme.staticSeparateAggregationPeriod(key);
 			}
 			
+			@Override
+			public int getKeyNumberLength(){
+				return DefaultAggregationPeriodKeyScheme.staticGetKeyNumberLength(ap, enableCompression);
+			}
+			
+			@Override
+			public String generateKey(long keyNumber) {
+				return DefaultAggregationPeriodKeyScheme.staticGenerateKey(ap, keyNumber, enableCompression);
+			}
+
+
 		};
 	}
 

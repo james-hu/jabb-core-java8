@@ -202,6 +202,9 @@ public class DefaultAggregationPeriodKeySchemeEnableCompressionTest {
 	protected void testRoundTrip(String key){
 		assertEquals(key, hapks.nextKey(hapks.previousKey(key)));
 		assertEquals(key, hapks.previousKey(hapks.nextKey(key)));
+		
+		AggregationPeriod ap = hapks.retrieveAggregationPeriod(key);
+		assertEquals(key, key.length(), hapks.getKeyNumberLength(ap) + ap.getCodeName().length());
 	}
 	
 	@Test
