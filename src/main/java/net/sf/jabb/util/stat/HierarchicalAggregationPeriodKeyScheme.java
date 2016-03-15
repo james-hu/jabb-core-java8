@@ -152,5 +152,76 @@ public interface HierarchicalAggregationPeriodKeyScheme{
 	 * 			and the second element is the remaining part of the key
 	 */
 	String[] separateAggregationPeriod(String key);
+
+	/**
+	 * Generate the number presentation of the key without the aggregation period part
+	 * @param ap		the aggregation period
+	 * @param year			the year
+	 * @param month	the month, valid values: [1, 12]
+	 * @param dayOfMonth	the day in the month
+	 * @param hour		the hour in the day, valid values: [0, 23]
+	 * @param minute	the minute in the hour, valid values: [0, 59]
+	 * @return	the time period key represented as a number
+	 */
+	long generateKeyNumber(AggregationPeriod ap, int year, int month, int dayOfMonth, int hour, int minute);
+
+	/**
+	 * Generate the number presentation of the key without the aggregation period part
+	 * @param ap		the aggregation period
+	 * @param dateTimeWithoutZone	the data time
+	 * @return	the time period key represented as a number
+	 */
+	long generateKeyNumber(AggregationPeriod ap, LocalDateTime dateTimeWithoutZone);
+
+	/**
+	 * Generate the number presentation of the key without the aggregation period part
+	 * @param apCode		aggregation period code
+	 * @param year			the year
+	 * @param month	the month, valid values: [1, 12]
+	 * @param dayOfMonth	the day in the month
+	 * @param hour		the hour in the day, valid values: [0, 23]
+	 * @param minute	the minute in the hour, valid values: [0, 59]
+	 * @return	the time period key represented as a number
+	 */
+	long generateKeyNumber(String apCode, int year, int month, int dayOfMonth, int hour, int minute);
+
+	/**
+	 * Generate the number presentation of the key without the aggregation period part
+	 * @param apCode		aggregation period code
+	 * @param dateTimeWithoutZone	the data time
+	 * @return	the time period key represented as a number
+	 */
+	long generateKeyNumber(String apCode, LocalDateTime dateTimeWithoutZone);
 	
+	/**
+	 * Get the length of the key number
+	 * @param ap	aggregation period
+	 * @return	length of the key number
+	 */
+	int getKeyNumberLength(AggregationPeriod ap);
+
+	/**
+	 * Get the length of the key number
+	 * @param apCode	code name of the aggregation period
+	 * @return	length of the key number
+	 */
+	int getKeyNumberLength(String apCode);
+
+	/**
+	 * Generate the string form of the key
+	 * @param ap		aggregation period
+	 * @param keyNumber	number part of the key
+	 * @return	the full string form of the key
+	 */
+	String generateKey(AggregationPeriod ap, long keyNumber);
+
+	/**
+	 * Generate the string form of the key
+	 * @param apCode	code name of the aggregation period
+	 * @param keyNumber	number part of the key
+	 * @return	the full string form of the key
+	 */
+	String generateKey(String apCode, long keyNumber);
+
+
 }

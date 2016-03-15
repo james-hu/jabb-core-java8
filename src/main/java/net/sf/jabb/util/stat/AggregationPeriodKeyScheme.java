@@ -117,4 +117,35 @@ public interface AggregationPeriodKeyScheme {
 	 */
 	String[] separateAggregationPeriod(String key);
 
+	/**
+	 * Generate a number representation of the key
+	 * @param year			the year
+	 * @param month	the month, valid values: [1, 12]
+	 * @param dayOfMonth	the day in the month
+	 * @param hour		the hour in the day, valid values: [0, 23]
+	 * @param minute	the minute in the hour, valid values: [0, 59]
+	 * @return	the time period key
+	 */
+	long generateKeyNumber(int year, int month, int dayOfMonth, int hour, int minute);
+
+	/**
+	 * Generate a number representation of the key
+	 * @param dateTimeWithoutZone  the date time
+	 * @return	the time period key
+	 */
+	long generateKeyNumber(LocalDateTime dateTimeWithoutZone);
+
+	/**
+	 * Get the length of the number part of the key
+	 * @return	length of the number part of the key
+	 */
+	int getKeyNumberLength();
+
+	/**
+	 * Generate the string form of the key
+	 * @param keyNumber		number part of the key
+	 * @return	the full string form of the key
+	 */
+	String generateKey(long keyNumber);
+
 }
