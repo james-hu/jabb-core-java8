@@ -319,6 +319,7 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 	 * @param step	step to move forward (if positive) or backward (if negative)
 	 * @param unit	unit of the step
 	 * @param zone	the time zone
+	 * @param enableCompression	whether to apply compression or not
 	 * @return	the first key found that is different form the key at the start point
 	 */
 	protected static String findNextKey(AggregationPeriod ap, String key, int step, TemporalUnit unit, ZoneId zone, boolean enableCompression){
