@@ -1,7 +1,6 @@
 package net.sf.jabb.util.time;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.time.ZoneId;
 import java.util.List;
@@ -63,5 +62,12 @@ public class TimeZoneUtilityTest {
 		}
 		assertEquals(sorted.size(), sorted.stream().collect(Collectors.toSet()).size());
 		assertEquals(ZoneId.getAvailableZoneIds().size(), sorted.stream().collect(Collectors.toSet()).size());
+	}
+	
+	@Test
+	public void testFormerZoneId(){
+		assertEquals(ZoneId.of("UTC"), TimeZoneUtility.toZoneId("a"));
+		assertEquals(ZoneId.of("UTC"), TimeZoneUtility.toZoneId("UTC"));
+		assertNull(TimeZoneUtility.toZoneId("non-existing"));
 	}
 }
