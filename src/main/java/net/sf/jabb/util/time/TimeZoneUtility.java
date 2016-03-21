@@ -140,12 +140,19 @@ public abstract class TimeZoneUtility {
 	
 	/**
 	 * Get the ZoneId corresponding to the shortened id
-	 * @param shortenedId	the shortened id
+	 * @param id	the shortened id, or the original id
 	 * @return	the ZoneId, or null if not found
 	 */
-	static public ZoneId toZoneId(String shortenedId){
-		String zoneId = shortenedIdToZoneIdMapping.get(shortenedId);
-		return zoneId == null ? null : ZoneId.of(zoneId);
+	static public ZoneId toZoneId(String id){
+		String zoneId = shortenedIdToZoneIdMapping.get(id);
+		if (zoneId != null){
+			return ZoneId.of(zoneId);
+		}
+		try{
+			return ZoneId.of(id);
+		}catch(Exception e){
+			return null;
+		}
 	}
 	
 	/**
