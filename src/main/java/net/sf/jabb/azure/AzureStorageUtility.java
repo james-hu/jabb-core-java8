@@ -71,7 +71,8 @@ public class AzureStorageUtility {
     static public final String ROW_KEY = "RowKey";
     static public final String TIMESTAMP = "Timestamp";
     
-	static public String[] COLUMNS_WITH_ONLY_KEYS = new String[0];
+	static public final String[] ONLY_KEY_COLUMNS = new String[0];
+	static public final String[] ALL_COLUMNS = null;
 	
 	static final int MAX_BATCH_OPERATION_SIZE = 100;
 	static final int MAX_GROUP_FOR_BATCH_OPERATION_SIZE = 1000;
@@ -143,8 +144,7 @@ public class AzureStorageUtility {
 	}
 	
 	/**
-	 * Generate a filter condition for string start with a prefix by checking if
-	 * the value is &gt;= prefix and &lt;= prefix + suffix
+	 * Generate a filter condition for string sits within a range of [startPrefix, endPrefix)
 	 * @param property		name of the property
 	 * @param startPrefix	the start prefix (inclusive)
 	 * @param endPrefix		the end prefix (exclusive)
@@ -155,6 +155,23 @@ public class AzureStorageUtility {
 				TableQuery.generateFilterCondition(property, QueryComparisons.GREATER_THAN_OR_EQUAL, startPrefix),
 				TableQuery.Operators.AND,
 				TableQuery.generateFilterCondition(property, QueryComparisons.LESS_THAN, endPrefix)
+				);
+	}
+	
+	/**
+	 * Generate a filter condition for string sits within a range
+	 * @param property		name of the property
+	 * @param startPrefix	the start prefix (inclusive or exclusive depending on includeStart parameter)
+	 * @param includeStart	true if the start prefix should be included, false if it should be excluded
+	 * @param endPrefix		the end prefix (inclusive or exclusive depending on includeEnd parameter)
+	 * @param includeEnd	true if the end prefix should be included, false if it should be excluded
+	 * @return	the filter condition string
+	 */
+	public static String generateStartToEndFilterCondition(String property, String startPrefix, boolean includeStart, String endPrefix, boolean includeEnd){
+		return TableQuery.combineFilters(
+				TableQuery.generateFilterCondition(property, includeStart ? QueryComparisons.GREATER_THAN_OR_EQUAL : QueryComparisons.GREATER_THAN, startPrefix),
+				TableQuery.Operators.AND,
+				TableQuery.generateFilterCondition(property, includeEnd ? QueryComparisons.LESS_THAN_OR_EQUAL : QueryComparisons.LESS_THAN, endPrefix)
 				);
 	}
 	
@@ -176,7 +193,7 @@ public class AzureStorageUtility {
 	
 	/**
 	 * Generate a filter condition for string start with a prefix by checking if
-	 * the value is &gt;= prefix and &lt;= prefix + "\u10FFFD"
+	 * the value is &gt;= prefix and &lt;= prefix + "\uFFFF"
 	 * @param property		name of the property
 	 * @param prefix		the prefix that the filter condition requires
 	 * @return	the filter condition string
@@ -420,7 +437,7 @@ public class AzureStorageUtility {
 	 */
 	static public void deleteEntitiesIfExistsInBatches(CloudTable table, String filter) throws StorageException{
 		TableQuery<TableServiceEntity> query = TableQuery.from(TableServiceEntity.class)
-				.select(COLUMNS_WITH_ONLY_KEYS);
+				.select(ONLY_KEY_COLUMNS);
 		if (StringUtils.isNotBlank(filter)){
 			query.where(filter);
 		}
