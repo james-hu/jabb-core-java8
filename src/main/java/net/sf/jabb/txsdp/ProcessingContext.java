@@ -111,6 +111,13 @@ public interface ProcessingContext {
 	Object get(String key);
 	
 	/**
+	 * Remove from the context if it exist.
+	 * @param key   the key previously used to put the value object
+	 * @return	the value previously associated with the key, or null if not found
+	 */
+	Object remove(String key);
+
+	/**
 	 * Get the transaction finisher that can be used to finish or abort the transaction.
 	 * @return	the transaction finisher that is detached from the context.
 	 */
@@ -148,5 +155,6 @@ public interface ProcessingContext {
 		 */
 		boolean updateTransactionDetail(Serializable newDetail);
 	}
+
 
 }

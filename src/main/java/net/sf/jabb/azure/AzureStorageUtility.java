@@ -71,12 +71,13 @@ public class AzureStorageUtility {
     static public final String ROW_KEY = "RowKey";
     static public final String TIMESTAMP = "Timestamp";
     
+	static public final String MAX_CHAR = "\uFFFF";
+
 	static public final String[] ONLY_KEY_COLUMNS = new String[0];
 	static public final String[] ALL_COLUMNS = null;
 	
 	static final int MAX_BATCH_OPERATION_SIZE = 100;
 	static final int MAX_GROUP_FOR_BATCH_OPERATION_SIZE = 1000;
-
 
 
 	public static boolean isNotFoundOrUpdateConditionNotSatisfied(StorageException e){
@@ -191,6 +192,10 @@ public class AzureStorageUtility {
 				);
 	}
 	
+	public static String appendMaxChar(String original){
+		return original + MAX_CHAR;
+	}
+	
 	/**
 	 * Generate a filter condition for string start with a prefix by checking if
 	 * the value is &gt;= prefix and &lt;= prefix + "\uFFFF"
@@ -199,7 +204,7 @@ public class AzureStorageUtility {
 	 * @return	the filter condition string
 	 */
 	public static String generateStartWithFilterCondition(String property, String prefix){
-		return generateStartWithFilterCondition(property, prefix, "\uFFFF");
+		return generateStartWithFilterCondition(property, prefix, MAX_CHAR);
 	}
 	
 	/**
