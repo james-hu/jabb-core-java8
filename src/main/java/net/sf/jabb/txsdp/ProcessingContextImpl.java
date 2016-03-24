@@ -65,6 +65,14 @@ class ProcessingContextImpl implements ProcessingContext{
 	}
 	
 	@Override
+	public Object remove(String key){
+		if (map == null){
+			return null;
+		}
+		return map.remove(key);
+	}
+	
+	@Override
 	public boolean renewTransactionTimeout(Instant newTimeout) {
 		try{
 			txCoordinator.renewTransactionTimeout(seriesId, transaction.getProcessorId(), transaction.getTransactionId(), newTimeout);
