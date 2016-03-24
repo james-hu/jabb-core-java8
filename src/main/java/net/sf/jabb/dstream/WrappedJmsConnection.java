@@ -191,6 +191,7 @@ public class WrappedJmsConnection implements Connection {
 	 */
 	public boolean establishConnection(boolean backoff){
 		if (isConnecting.compareAndSet(false, true)){
+			long startTime = System.currentTimeMillis();
 			try{
 				if (connection == null || !connectionValidator.test(connection)){
 					if (connection != null){
@@ -229,7 +230,7 @@ public class WrappedJmsConnection implements Connection {
 							connection = newConn;
 						}
 						if (connection == newConn){	// successfully (optionally) started and replaced
-							logger.info("[{}] New connection {} established for replacing {}", connectionFactory, newConn, oldConn);
+							logger.info("[{}] New connection {} established for replacing {} in {}ms", connectionFactory, newConn, oldConn, System.currentTimeMillis() - startTime);
 							closeSilently(oldConn);
 							connectAttempts = 0;
 							return true;
