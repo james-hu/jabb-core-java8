@@ -364,7 +364,7 @@ public class DefaultTransactionalStreamDataBatchProcessing<M> implements Transac
 					
 					// if sticky is true, we don't need to get a transaction skeleton from the coordinator. and we don't change to another partition
 					boolean newSticky = processorOptions.stickyMode == Options.STICKY_WHEN_OPEN_RANGE_SUCCEEDED && context.isOpenRangeSuccessfullyClosed ||
-							processorOptions.stickyMode == Options.STICKY_WHEN_OPEN_RANGE_SUCCEEDED_OR_NO_DATA && context.isOpenRangeAbortedBecauseNothingReceived;
+							processorOptions.stickyMode == Options.STICKY_WHEN_OPEN_RANGE_SUCCEEDED_OR_NO_DATA && (context.isOpenRangeSuccessfullyClosed || context.isOpenRangeAbortedBecauseNothingReceived);
 					if (sticky != newSticky){
 						sticky = newSticky;
 						logger.debug("Processor '{}' {}stick on '{}'", processorId, sticky ? "" : "no longer ", seriesId(localSuppliers.get(partition)));
