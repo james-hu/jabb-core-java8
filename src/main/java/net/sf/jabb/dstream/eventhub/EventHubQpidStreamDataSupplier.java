@@ -60,6 +60,8 @@ import net.sf.jabb.util.text.DurationFormatter;
 public class EventHubQpidStreamDataSupplier<M> extends JmsConsumerStreamDataSupplier<M> {
 	private static final Logger logger = LoggerFactory.getLogger(EventHubQpidStreamDataSupplier.class);
 	
+	protected static long RECEIVE_MUST_EXIST_MESSAGE_WAIT_MILLIS = 10_000L;
+	
 	protected Function<Message, M> messageConverter;
 	
 	protected WrappedJmsConnection wrappedConnection;
@@ -325,9 +327,9 @@ public class EventHubQpidStreamDataSupplier<M> extends JmsConsumerStreamDataSupp
 		
 		Message msg = null;
 		try {
-			msg = firstMessageByReceive(selector, 0);
+			msg = firstMessageByReceive(selector, RECEIVE_MUST_EXIST_MESSAGE_WAIT_MILLIS);	// the message must have existed, but it may not exist now because the server may purge old messages
 			if (msg == null){
-				logger.warn("Null message received for position {}", position);
+				logger.warn("Null message received for position {}, perhaps the message had been purged?", position);
 				return null;
 			}
 			EventHubAnnotations annotations = AzureEventHubUtility.getEventHubAnnotations(msg);
