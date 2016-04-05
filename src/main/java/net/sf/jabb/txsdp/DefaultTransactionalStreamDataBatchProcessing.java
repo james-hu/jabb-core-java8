@@ -402,15 +402,15 @@ public class DefaultTransactionalStreamDataBatchProcessing<M> implements Transac
 							String previousTransactionId;
 							String previousEndPosition;
 							String startPosition = null;
-							if (sticky && context.isOpenRangeAbortedBecauseNothingReceived){
+							if (sticky && transaction == context.transaction && context.isOpenRangeAbortedBecauseNothingReceived){
 								previousTransactionId = context.previousTransactionPreviousTransactionId;
 								previousEndPosition = context.previousTransactionEndPosition;
 								startPosition = transaction.getStartPosition();		// just retry last one, the transaction object is from context
 							}else{
 								previousTransactionId = transaction.getTransactionId();
-								if (sticky && context.isOpenRangeSuccessfullyClosed){
-									previousEndPosition = transaction.getEndPosition();		// the transaction object is from context
-								}else{	// no sticky
+								if (sticky && transaction == context.transaction && context.isOpenRangeSuccessfullyClosed){
+									previousEndPosition = transaction.getEndPosition();		// the transaction object is from context 
+								}else{	// non sticky or another skeleton was returned from startTransaction(...)
 									previousEndPosition = transaction.getStartPosition();	// the transaction object is returned by the coordinator
 								}
 								if (previousEndPosition == null){
@@ -430,7 +430,8 @@ public class DefaultTransactionalStreamDataBatchProcessing<M> implements Transac
 							transaction = txCoordinator.startTransaction(seriesId, previousTransactionId, previousEndPosition, transaction, 
 									processorOptions.getMaxInProgressTransactions(), processorOptions.getMaxRetringTransactions());
 							if (logger.isDebugEnabled()){
-								logger.debug("[{}] Processor {} tried to start transaction: sticky={}, previousTransactionId={}, previousEndPosition={}, startPosition={}, transactionId={}", seriesId, processorId, sticky, previousTransactionId, previousEndPosition, startPosition, transaction == null ? null : transaction.getTransactionId());
+								logger.debug("[{}] Processor {} tried to start transaction: sticky={}, previousTransactionId={}, previousEndPosition={}, startPosition={}, returnedTransactionId={}, returnedTransactionHasStarted={}", 
+										seriesId, processorId, sticky, previousTransactionId, previousEndPosition, startPosition, transaction == null ? null : transaction.getTransactionId(), transaction == null ? null : transaction.hasStarted());
 							}
 						}
 					}catch(TransactionStorageInfrastructureException e){
@@ -444,7 +445,7 @@ public class DefaultTransactionalStreamDataBatchProcessing<M> implements Transac
 						transaction = null;
 					}finally{
 						// clear those flags so that the next round will start from a new state 
-						// otherwise sometimes the processor may stick to the same partition for ever
+						// otherwise sometimes the processor may stick to the same partition forever
 						context.isOpenRangeAbortedBecauseNothingReceived = false;
 						context.isOpenRangeSuccessfullyClosed = false;
 						context.isOutOfRangeMessageReached = false;
