@@ -3,10 +3,11 @@
  */
 package net.sf.jabb.util.parallel;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * An array backed auto-scalable holdable pool. 
@@ -19,17 +20,16 @@ import java.util.stream.Collectors;
  */
 public class ArrayScalableHoldablePool<T> implements HoldablePool<T> {
 	protected Supplier<T> factory;
-	protected Holdable<T>[] pool;
+	protected AtomicReferenceArray<Holdable<T>> pool;
 	
 	/**
 	 * Constructor
 	 * @param factory	the factory function to create the objects
 	 * @param size		the maximum number of objects allowed to be craeted
 	 */
-	@SuppressWarnings("unchecked")
 	public ArrayScalableHoldablePool(Supplier<T> factory, int size){
 		this.factory = factory;
-		this.pool = new Holdable[size];
+		this.pool = new AtomicReferenceArray<>(size);
 	}
 	
 	/**
@@ -42,54 +42,55 @@ public class ArrayScalableHoldablePool<T> implements HoldablePool<T> {
 
 	@Override
 	public Holdable<T> getHold(long holdId) {
-		for (int i = 0; ; i = (i+1) % pool.length){
-			Holdable<T> holdable = pool[i];
+		for (int i = 0; ; i = (i+1) % pool.length()){
+			Holdable<T> holdable = pool.get(i);
 			if (holdable == null){
-				synchronized(pool){
-					if (pool[i] == null){
-						holdable = new Holdable<>(factory.get(), holdId);
-						pool[i] = holdable;
-						return holdable;
-					}
-				}
-			}else{
-				if (holdable.hold(holdId)){
-					return holdable;
-				}
+				Holdable<T> newHoldable = new Holdable<>(factory.get());
+				holdable = pool.updateAndGet(i, v -> v == null ? newHoldable : v);
+			}
+			if (holdable.hold(holdId)){
+				return holdable;
 			}
 		}
 	}
 
 	@Override
 	public Collection<T> getAll() {
-		return Arrays.stream(pool).filter(h-> h != null).map(h -> h.get()).collect(Collectors.toList());
+		List<T> result = new ArrayList<>();
+		for (int i = 0; i < pool.length(); i ++){
+			Holdable<T> holdable = pool.get(i);
+			if (holdable != null){
+				result.add(holdable.get());
+			}
+		}
+		return result;
 	}
 
 	@Override
 	public void reset(T object) {
-		for (int i = 0; i < pool.length; i ++){
-			pool[i] = null;
+		for (int i = 0; i < pool.length(); i ++){
+			pool.set(i, null);
 		}
 		
 		if (object != null){
-			pool[0] = new Holdable<>(object);
+			pool.set(0, new Holdable<>(object));
 		}
 		
 	}
 
 	@Override
 	public int getSize() {
-		for (int i = 0; i < pool.length; i ++){
-			if (pool[i] == null){
+		for (int i = 0; i < pool.length(); i ++){
+			if (pool.get(i) == null){
 				return i;
 			}
 		}
-		return pool.length;
+		return pool.length();
 	}
 
 	@Override
 	public int getCapacity() {
-		return pool.length;
+		return pool.length();
 	}
 
 
