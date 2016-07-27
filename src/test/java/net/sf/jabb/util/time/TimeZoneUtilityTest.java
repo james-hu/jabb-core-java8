@@ -3,20 +3,34 @@ package net.sf.jabb.util.time;
 import static org.junit.Assert.*;
 
 import java.time.ZoneId;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.Test;
 
 import com.google.common.collect.BiMap;
 
+import net.sf.jabb.util.col.CollectionDiff;
+
 public class TimeZoneUtilityTest {
 
 	@Test
-	public void testUniqueness() {
+	public void testUniquenessAndCoverage() {
 		BiMap<String, String> idMapping = TimeZoneUtility.getShortenedIdToZoneIdMapping();
-		assertEquals(ZoneId.getAvailableZoneIds().size(), idMapping.keySet().size());
+		Set<String> zoneIds = new HashSet<>(ZoneId.getAvailableZoneIds());
 		
+		CollectionDiff.Result<String> diff = CollectionDiff.compare(zoneIds, idMapping.values());
+		
+		if (diff.getElementsOnlyInLhs().size() > 0){
+			fail("Zones not covered: " + diff.getElementsOnlyInLhs());
+		}
+		
+		if (diff.getElementsOnlyInRhs().size() > 0){
+			fail("Zones not found JDK: " + diff.getElementsOnlyInRhs());
+		}
+
 		/* we don't support translation of offseted zones any more
 		Set<String> ids = new HashSet<>();
 		for (int i = -64800; i <= 64800; i ++){
@@ -57,7 +71,7 @@ public class TimeZoneUtilityTest {
 		List<String> sorted = TimeZoneUtility.getSortedZoneIds();
 		int i = 0;
 		for (String id: sorted){
-			System.out.println("" + i + "\t" + TimeZoneUtility.intToAlphaString(i) + "\t" + id);
+			//System.out.println("" + i + "\t" + TimeZoneUtility.intToAlphaString(i) + "\t" + id);
 			i++;
 		}
 		assertEquals(sorted.size(), sorted.stream().collect(Collectors.toSet()).size());
