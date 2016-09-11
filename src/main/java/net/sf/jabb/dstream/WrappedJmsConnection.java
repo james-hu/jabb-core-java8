@@ -51,14 +51,14 @@ public class WrappedJmsConnection implements Connection {
 	protected ExceptionListener exceptionListener;
 	protected Predicate<Connection> connectionValidator;
 	
-	
+	protected Object stopStartLock = new Object();
 	protected AtomicInteger stopStartLatch = new AtomicInteger(0);
 	protected AtomicBoolean isConnecting = new AtomicBoolean(false);
 	protected int connectAttempts = 0;
 	protected BackoffStrategy connectBackoffStrategy;
 	protected WaitStrategy connectWaitStrategy;
 	
-	protected static ExecutorService threadPool;	// shared across all connections
+	protected static volatile ExecutorService threadPool;	// shared across all connections
 
 	/**
 	 * Constructor. Connection will be established immediately.
@@ -85,13 +85,14 @@ public class WrappedJmsConnection implements Connection {
 		if (threadPool == null){
 			synchronized(WrappedJmsConnection.class){
 				if (threadPool == null){
-					threadPool = new ThreadPoolExecutor(Integer.MAX_VALUE, Integer.MAX_VALUE, 2, TimeUnit.MINUTES,
+					ThreadPoolExecutor newThreadPool = new ThreadPoolExecutor(Integer.MAX_VALUE, Integer.MAX_VALUE, 2, TimeUnit.MINUTES,
 							new LinkedBlockingQueue<>(),
 							new BasicThreadFactory.Builder()
 									.namingPattern(WrappedJmsConnection.class.getSimpleName() + "-%d")
 									.priority(Thread.MIN_PRIORITY)
 									.build());
-					((ThreadPoolExecutor)threadPool).allowCoreThreadTimeOut(true);
+					newThreadPool.allowCoreThreadTimeOut(true);
+					threadPool = newThreadPool;
 				}
 			}
 		}
@@ -218,7 +219,7 @@ public class WrappedJmsConnection implements Connection {
 					}
 					if (newConn != null){
 						Connection oldConn = connection;
-						synchronized(stopStartLatch){
+						synchronized(stopStartLock){
 							if (stopStartLatch.get() == 0){
 								try {
 									newConn.start();
@@ -382,7 +383,7 @@ public class WrappedJmsConnection implements Connection {
 	 */
 	@Override
 	public void start() throws JMSException {
-		synchronized(stopStartLatch){
+		synchronized(stopStartLock){
 			if (stopStartLatch.decrementAndGet() == 0){
 				try{
 					getConnection().start();
@@ -398,7 +399,7 @@ public class WrappedJmsConnection implements Connection {
 	 */
 	@Override
 	public void stop() throws JMSException {
-		synchronized(stopStartLatch){
+		synchronized(stopStartLock){
 			if (stopStartLatch.getAndIncrement() == 0){
 				try{
 					getConnection().stop();
