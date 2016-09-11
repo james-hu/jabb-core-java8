@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 public class WrappedJmsConnection implements Connection {
 	static private final Logger logger = LoggerFactory.getLogger(WrappedJmsConnection.class);
 	
+	protected static final int RETRY_MAX_CREATE_SESSION = 3;
 	protected ConnectionFactory connectionFactory;
 	protected volatile Connection connection;
 	
@@ -194,10 +195,10 @@ public class WrappedJmsConnection implements Connection {
 		if (isConnecting.compareAndSet(false, true)){
 			long startTime = System.currentTimeMillis();
 			try{
-				if (connection == null || !connectionValidator.test(connection)){
-					if (connection != null){
-						logger.debug("Connection closed: {}", connection);
-					}
+				if (connection != null && connectionValidator.test(connection)){
+					return true;	// no need to reconnect
+				}else{
+					logger.debug("Connection is not usable: {}", connection);
 					connectAttempts ++;
 					Connection newConn = null;
 					try{
@@ -322,19 +323,21 @@ public class WrappedJmsConnection implements Connection {
 	 */
 	@Override
 	public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
-		Connection conn = getConnection();
-		if (conn == null){
-			establishConnection(false);
-		}
-		try{
-			return getConnection().createSession(transacted, acknowledgeMode);
-		}catch(JMSException|IllegalStateException e){
-			if (isConnectionClosed(e)){  // Event Hub closed the connection
-				if (establishConnection(false)){
-					return getConnection().createSession(transacted, acknowledgeMode);
+		for (int i = 0;; i ++){
+			Connection conn = getConnection();
+			if (conn == null){
+				establishConnection(false);
+				continue;
+			}
+			try{
+				return conn.createSession(transacted, acknowledgeMode);
+			}catch(JMSException|IllegalStateException e){
+				if (i < RETRY_MAX_CREATE_SESSION && isConnectionClosed(e)){
+					establishConnection(false);
+				}else{
+					throw e;
 				}
 			}
-			throw e;
 		}
 	}
 
