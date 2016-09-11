@@ -102,7 +102,7 @@ public class ClusteredLoadBalancer<L, R, P extends Serializable> extends BasicLo
 				withBackupProcessors ? null : backupProcessors);
 	}
 	
-	protected StateData<P> getState(){
+	synchronized protected StateData<P> getState(){
 		return getState(true, true, true);
 	}
 	

@@ -45,20 +45,21 @@ import org.slf4j.LoggerFactory;
 public class WrappedJmsConnection implements Connection {
 	static private final Logger logger = LoggerFactory.getLogger(WrappedJmsConnection.class);
 	
+	protected static final int RETRY_MAX_CREATE_SESSION = 3;
 	protected ConnectionFactory connectionFactory;
 	protected volatile Connection connection;
 	
 	protected ExceptionListener exceptionListener;
 	protected Predicate<Connection> connectionValidator;
 	
-	
+	protected Object stopStartLock = new Object();
 	protected AtomicInteger stopStartLatch = new AtomicInteger(0);
 	protected AtomicBoolean isConnecting = new AtomicBoolean(false);
 	protected int connectAttempts = 0;
 	protected BackoffStrategy connectBackoffStrategy;
 	protected WaitStrategy connectWaitStrategy;
 	
-	protected static ExecutorService threadPool;	// shared across all connections
+	protected static volatile ExecutorService threadPool;	// shared across all connections
 
 	/**
 	 * Constructor. Connection will be established immediately.
@@ -85,13 +86,14 @@ public class WrappedJmsConnection implements Connection {
 		if (threadPool == null){
 			synchronized(WrappedJmsConnection.class){
 				if (threadPool == null){
-					threadPool = new ThreadPoolExecutor(Integer.MAX_VALUE, Integer.MAX_VALUE, 2, TimeUnit.MINUTES,
+					ThreadPoolExecutor newThreadPool = new ThreadPoolExecutor(Integer.MAX_VALUE, Integer.MAX_VALUE, 2, TimeUnit.MINUTES,
 							new LinkedBlockingQueue<>(),
 							new BasicThreadFactory.Builder()
 									.namingPattern(WrappedJmsConnection.class.getSimpleName() + "-%d")
 									.priority(Thread.MIN_PRIORITY)
 									.build());
-					((ThreadPoolExecutor)threadPool).allowCoreThreadTimeOut(true);
+					newThreadPool.allowCoreThreadTimeOut(true);
+					threadPool = newThreadPool;
 				}
 			}
 		}
@@ -193,10 +195,10 @@ public class WrappedJmsConnection implements Connection {
 		if (isConnecting.compareAndSet(false, true)){
 			long startTime = System.currentTimeMillis();
 			try{
-				if (connection == null || !connectionValidator.test(connection)){
-					if (connection != null){
-						logger.debug("Connection closed: {}", connection);
-					}
+				if (connection != null && connectionValidator.test(connection)){
+					return true;	// no need to reconnect
+				}else{
+					logger.debug("Connection is not usable: {}", connection);
 					connectAttempts ++;
 					Connection newConn = null;
 					try{
@@ -218,7 +220,7 @@ public class WrappedJmsConnection implements Connection {
 					}
 					if (newConn != null){
 						Connection oldConn = connection;
-						synchronized(stopStartLatch){
+						synchronized(stopStartLock){
 							if (stopStartLatch.get() == 0){
 								try {
 									newConn.start();
@@ -321,19 +323,21 @@ public class WrappedJmsConnection implements Connection {
 	 */
 	@Override
 	public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
-		Connection conn = getConnection();
-		if (conn == null){
-			establishConnection(false);
-		}
-		try{
-			return getConnection().createSession(transacted, acknowledgeMode);
-		}catch(JMSException|IllegalStateException e){
-			if (isConnectionClosed(e)){  // Event Hub closed the connection
-				if (establishConnection(false)){
-					return getConnection().createSession(transacted, acknowledgeMode);
+		for (int i = 0;; i ++){
+			Connection conn = getConnection();
+			if (conn == null){
+				establishConnection(false);
+				continue;
+			}
+			try{
+				return conn.createSession(transacted, acknowledgeMode);
+			}catch(JMSException|IllegalStateException e){
+				if (i < RETRY_MAX_CREATE_SESSION && isConnectionClosed(e)){
+					establishConnection(false);
+				}else{
+					throw e;
 				}
 			}
-			throw e;
 		}
 	}
 
@@ -382,7 +386,7 @@ public class WrappedJmsConnection implements Connection {
 	 */
 	@Override
 	public void start() throws JMSException {
-		synchronized(stopStartLatch){
+		synchronized(stopStartLock){
 			if (stopStartLatch.decrementAndGet() == 0){
 				try{
 					getConnection().start();
@@ -398,7 +402,7 @@ public class WrappedJmsConnection implements Connection {
 	 */
 	@Override
 	public void stop() throws JMSException {
-		synchronized(stopStartLatch){
+		synchronized(stopStartLock){
 			if (stopStartLatch.getAndIncrement() == 0){
 				try{
 					getConnection().stop();
