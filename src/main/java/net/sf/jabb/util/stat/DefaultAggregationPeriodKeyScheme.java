@@ -126,7 +126,7 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 			case WEEK_BASED_YEAR:
 				return 4;
 			case YEAR_MONTH:
-				return enableCompression & ap.amount > 1 ? 5 : 6;
+				return enableCompression && ap.amount > 1 ? 5 : 6;
 			case WEEK_BASED_YEAR_WEEK:
 			case YEAR_WEEK_ISO:
 			case YEAR_WEEK_SUNDAY_START:
@@ -134,9 +134,9 @@ public class DefaultAggregationPeriodKeyScheme implements HierarchicalAggregatio
 			case YEAR_MONTH_DAY:
 				return 8;
 			case YEAR_MONTH_DAY_HOUR:
-				return enableCompression & ap.amount > 2 ? 9 : 10;
+				return enableCompression && ap.amount > 2 ? 9 : 10;
 			case YEAR_MONTH_DAY_HOUR_MINUTE:
-				return enableCompression & (ap.amount == 10 || ap.amount == 20 || ap.amount >= 6) ? 11 : 12;
+				return enableCompression && (ap.amount == 10 || ap.amount == 20 || ap.amount >= 6) ? 11 : 12;
 			default:
 				throw new IllegalArgumentException("Unknown aggregation period: " + ap);
 		}

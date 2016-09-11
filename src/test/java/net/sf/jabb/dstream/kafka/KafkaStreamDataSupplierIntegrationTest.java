@@ -107,7 +107,7 @@ public class KafkaStreamDataSupplierIntegrationTest {
 					"--topic testTopic", "--partitions 1");
 			int ret = kafkaTopic.waitFor();
 			if (ret != 0) {
-				System.out.printf("kafka create topic return ", ret);
+				System.out.printf("kafka create topic return %d", ret);
 			}
 		}
 
