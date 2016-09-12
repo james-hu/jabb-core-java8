@@ -30,22 +30,20 @@ import java.util.List;
  * @author James Hu (Zhengmao Hu)
  *
  */
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
 @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-public class CJTSD {
-	String u;
-	List<Long> t;
-	List<Integer> d;
-	
-	List<Long> c;
-	List<Number> s;
-	List<Number> a;
-	List<Number> m;
-	List<Number> x;
-	List<Number> n;
-	List<Object> o;
+public class CJTSD extends PlainCJTSD{
 
 	public CJTSD(){
-		
+		super();
+	}
+	
+	/**
+	 * Shallow copy constructor
+	 * @param other	another instance from which the properties will be copied
+	 */
+	public CJTSD(PlainCJTSD other){
+		super(other);
 	}
 	
 	/**
@@ -474,93 +472,5 @@ public class CJTSD {
 		
 	}
 
-	@org.boon.json.annotations.JsonInclude(org.boon.json.annotations.JsonInclude.Include.NON_NULL)
-	public String getU() {
-		return u;
-	}
 
-	@org.boon.json.annotations.JsonInclude(org.boon.json.annotations.JsonInclude.Include.NON_NULL)
-	public List<Long> getT() {
-		return t;
-	}
-
-	@org.boon.json.annotations.JsonInclude(org.boon.json.annotations.JsonInclude.Include.NON_NULL)
-	public List<Integer> getD() {
-		return d;
-	}
-
-	@org.boon.json.annotations.JsonInclude(org.boon.json.annotations.JsonInclude.Include.NON_NULL)
-	public List<Long> getC() {
-		return c;
-	}
-
-	@org.boon.json.annotations.JsonInclude(org.boon.json.annotations.JsonInclude.Include.NON_NULL)
-	public List<Number> getS() {
-		return s;
-	}
-
-	@org.boon.json.annotations.JsonInclude(org.boon.json.annotations.JsonInclude.Include.NON_NULL)
-	public List<Number> getA() {
-		return a;
-	}
-
-	@org.boon.json.annotations.JsonInclude(org.boon.json.annotations.JsonInclude.Include.NON_NULL)
-	public List<Number> getM() {
-		return m;
-	}
-
-	@org.boon.json.annotations.JsonInclude(org.boon.json.annotations.JsonInclude.Include.NON_NULL)
-	public List<Number> getX() {
-		return x;
-	}
-
-	@org.boon.json.annotations.JsonInclude(org.boon.json.annotations.JsonInclude.Include.NON_NULL)
-	public List<Number> getN() {
-		return n;
-	}
-
-	@org.boon.json.annotations.JsonInclude(org.boon.json.annotations.JsonInclude.Include.NON_NULL)
-	public List<Object> getO() {
-		return o;
-	}
-
-	public void setU(String u) {
-		this.u = u;
-	}
-
-	public void setT(List<Long> t) {
-		this.t = t;
-	}
-
-	public void setD(List<Integer> d) {
-		this.d = d;
-	}
-
-	public void setC(List<Long> c) {
-		this.c = c;
-	}
-
-	public void setS(List<Number> s) {
-		this.s = s;
-	}
-
-	public void setA(List<Number> a) {
-		this.a = a;
-	}
-
-	public void setM(List<Number> m) {
-		this.m = m;
-	}
-
-	public void setX(List<Number> x) {
-		this.x = x;
-	}
-
-	public void setN(List<Number> n) {
-		this.n = n;
-	}
-
-	public void setO(List<Object> o) {
-		this.o = o;
-	}
 }
