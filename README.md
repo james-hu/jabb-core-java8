@@ -1,4 +1,7 @@
-# jabb-core-java8 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.sf.jabb/jabb-core-java8/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.sf.jabb/jabb-core-java8)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.sf.jabb/jabb-core-java8/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.sf.jabb/jabb-core-java8)
+[![Codeship Status for james-hu/jabb-core-java8](https://codeship.com/projects/334a6ba0-b8f4-0133-1e32-66c6d90159b1/status?branch=master)](https://codeship.com/projects/135352)
+
+# jabb-core-java8 
 
 Collection of reusable application building blocks that require Java 8:
 
@@ -8,4 +11,7 @@ Collection of reusable application building blocks that require Java 8:
 * [StreamDataSupplier](https://github.com/james-hu/jabb-core-java8/wiki/StreamDataSupplier) - Abstraction of data stream
 * [TransactionalStreamDataBatchProcessing](https://github.com/james-hu/jabb-core-java8/wiki/TransactionalStreamDataBatchProcessing) - Coordinated processing of stream data
 
-[![Codeship Status for james-hu/jabb-core-java8](https://codeship.com/projects/334a6ba0-b8f4-0133-1e32-66c6d90159b1/status?branch=master)](https://codeship.com/projects/135352)
+Mirrors:
+
+* On [coding.net](https://coding.net/u/james-hu/p/jabb-core-java8/)
+* On [GitHub](https://github.com/james-hu/jabb-core-java8)
