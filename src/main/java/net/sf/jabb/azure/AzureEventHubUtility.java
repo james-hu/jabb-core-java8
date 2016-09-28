@@ -126,6 +126,26 @@ public class AzureEventHubUtility {
 		return EventHubQpidStreamDataSupplier.create(server, policyName, policyKey, eventHubName, consumerGroup, messageConverter);
 	}
 	
+	/**
+	 * Create a list of {@link SimpleStreamDataSupplierWithId}s from an Event Hub, with fromEnqueuedTime specified.
+	 * @param <M>		type of the message
+	 * @param server		the server name containing name space of the Event Hub
+	 * @param policyName	policy with read permission
+	 * @param policyKey		key of the policy
+	 * @param eventHubName	name of the Event Hub
+	 * @param consumerGroup		consumer group name
+	 * @param messageConverter	JMS message converter
+	 * @param fromEnqueuedTime	The time that data items provided by stream data supplier must not be enqueued earlier than.
+	 * 							It can be null which means that the data items provided can be enqueued at any time.
+	 * @return					a list of {@link SimpleStreamDataSupplierWithId}s, one per partition
+	 * @throws JMSException		If list of partitions cannot be fetched
+	 */
+	public static <M> List<StreamDataSupplierWithId<M>> createStreamDataSuppliers(String server, String policyName, String policyKey,
+	                                                                              String eventHubName, String consumerGroup, Function<Message, M> messageConverter,
+	                                                                              Instant fromEnqueuedTime) throws JMSException{
+		return EventHubQpidStreamDataSupplier.create(server, policyName, policyKey, eventHubName, consumerGroup, messageConverter, fromEnqueuedTime);
+	}
+	
 	public static String generateSharedAccessSignature(String stringToSign, byte[] keyBytes){
 		SecretKey key256;
 		Mac hmacSha256;

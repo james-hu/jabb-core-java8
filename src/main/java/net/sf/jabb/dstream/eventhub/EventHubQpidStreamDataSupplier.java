@@ -28,6 +28,7 @@ import javax.jms.QueueBrowser;
 import javax.jms.Session;
 
 import net.sf.jabb.dstream.StreamDataSupplierWithId;
+import net.sf.jabb.dstream.StreamDataSupplierWithIdAndEnqueuedTimeRange;
 import net.sf.jabb.dstream.SimpleStreamDataSupplierWithId;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -208,12 +209,34 @@ public class EventHubQpidStreamDataSupplier<M> extends JmsConsumerStreamDataSupp
 	 */
 	public static <M> List<StreamDataSupplierWithId<M>> create(String server, String policyName, String policyKey,
 	                                                           String eventHubName, String consumerGroup, Function<Message, M> messageConverter) throws JMSException{
+		return create(server, policyName, policyKey, eventHubName, consumerGroup, messageConverter, null);
+	}
+	
+	/**
+	 * Create a list of {@link SimpleStreamDataSupplierWithId}s from an Event Hub, with fromEnqueuedTime specified.
+	 * @param <M>		type of the message
+	 * @param server		the server name containing name space of the Event Hub
+	 * @param policyName	policy with read permission
+	 * @param policyKey		key of the policy
+	 * @param eventHubName	name of the Event Hub
+	 * @param consumerGroup		consumer group name
+	 * @param messageConverter	JMS message converter
+	 * @param fromEnqueuedTime	The time that data items provided by stream data supplier must not be enqueued earlier than.
+	 * 							It can be null which means that the data items provided can be enqueued at any time.
+	 * @return					a list of {@link SimpleStreamDataSupplierWithId}s, one per partition
+	 * @throws JMSException		If list of partitions cannot be fetched
+	 */
+	public static <M> List<StreamDataSupplierWithId<M>> create(String server, String policyName, String policyKey,
+	                                                           String eventHubName, String consumerGroup, Function<Message, M> messageConverter,
+	                                                           Instant fromEnqueuedTime) throws JMSException{
 		String[] partitions = AzureEventHubUtility.getPartitions(server, policyName, policyKey, eventHubName);
 		List<StreamDataSupplierWithId<M>> suppliers = new ArrayList<>(partitions.length);
 		for (String partition: partitions){
 			EventHubQpidStreamDataSupplier<M> supplier = new EventHubQpidStreamDataSupplier<>(server, eventHubName, policyName, policyKey,
 					consumerGroup, partition, messageConverter);
-			suppliers.add(new SimpleStreamDataSupplierWithId<>(partition, supplier));
+			suppliers.add(fromEnqueuedTime == null ? 
+					new SimpleStreamDataSupplierWithId<>(partition, supplier) :
+					new StreamDataSupplierWithIdAndEnqueuedTimeRange<>(partition, supplier, fromEnqueuedTime, null));
 		}
 		return suppliers;
 	}
