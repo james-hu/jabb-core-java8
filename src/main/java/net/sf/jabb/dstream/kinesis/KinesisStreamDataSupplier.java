@@ -358,13 +358,13 @@ public class KinesisStreamDataSupplier<M> implements StreamDataSupplier<M> {
 	}
 
 	@Override
-	public boolean isInRange(String position, String endPosition) {
+	public int checkInRange(String position, String endPosition) {
 		Validate.isTrue(position != null, "position cannot be null");
 		if (endPosition == null){
-			return true;
+			return -1;
 		}else{
 			if (Position.isBeforeTheVeryFirst(position)){
-				return true;
+				return -1;
 			}
 			Position pos = Position.of(position);
 			Position endPos = Position.of(endPosition);
@@ -373,22 +373,19 @@ public class KinesisStreamDataSupplier<M> implements StreamDataSupplier<M> {
 			BigInteger endSequenceNumber = endPos.getSequenceNumberAsBigInteger();
 			switch (sequenceNumber.compareTo(endSequenceNumber)){
 				case -1:
-					return true;
+					return -1;
 				case 1:
-					return false;
+					return 1;
 				default: //case 0:
-					return pos.getSubSequenceNumber() <= endPos.getSubSequenceNumber();
+					long l = pos.getSubSequenceNumber() - endPos.getSubSequenceNumber();
+					if (l < 0){
+						return -1;
+					}else if (l > 0){
+						return 1;
+					}else{
+						return 0;
+					}
 			}
-		}
-	}
-	
-	@Override
-	public boolean isInRange(Instant enqueuedTime, Instant endEnqueuedTime) {
-		Validate.isTrue(enqueuedTime != null, "enqueuedTime cannot be null");
-		if (endEnqueuedTime == null){
-			return true;
-		}else{
-			return !enqueuedTime.isAfter(endEnqueuedTime);
 		}
 	}
 	

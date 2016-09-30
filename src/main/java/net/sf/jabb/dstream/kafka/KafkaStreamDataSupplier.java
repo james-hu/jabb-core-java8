@@ -79,22 +79,6 @@ public class KafkaStreamDataSupplier<M> implements StreamDataSupplier<M> {
 	}
 
 	@Override
-	public boolean isInRange(String position, String endPosition) {
-		Validate.isTrue(position != null, "position cannot be null");
-		if (endPosition == null) {
-			return true;
-		}
-		return Long.parseLong(position) <= Long.parseLong(endPosition);
-	}
-
-	@Override
-	public boolean isInRange(Instant enqueuedTime, Instant endEnqueuedTime) {
-		// TODO throw exception. To change this throw exception will change lots
-		// of interface.
-		return false;
-	}
-
-	@Override
 	public ReceiveStatus fetch(List<? super M> list, String startPosition, String endPosition, int maxItems,
 			Duration timeoutDuration) throws InterruptedException, DataStreamInfrastructureException {
 		Long startPos = Long.parseLong(startPosition);
