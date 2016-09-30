@@ -416,8 +416,8 @@ public class AzureSequentialTransactionsCoordinator implements SequentialTransac
 					new AttemptStrategy(attemptStrategy)
 						.overrideBackoffStrategy(BackoffStrategies.noBackoff())
 						.retryIfException(ENTITY_HAS_BEEN_DELETED_OR_MODIFIED_BY_OTHERS)
-						.runThrowingSuppressed(()->modifyTransaction(seriesId, null, tx.getTransactionId(), 
-								entity->entity.retry(processorId, timeout), entity->{
+						.runThrowingSuppressed(()->modifyTransaction(seriesId, tx.getProcessorId(), tx.getTransactionId(), 
+								entity->entity.getAttempts() == tx.getAttempts() && entity.retry(processorId, timeout), entity->{
 									CloudTable table = getTableReference();
 									table.execute(TableOperation.replace(entity));
 									startedTx.set(entity.toSequentialTransaction());
@@ -425,7 +425,7 @@ public class AzureSequentialTransactionsCoordinator implements SequentialTransac
 					return startedTx.get();
 				} catch (TransactionStorageInfrastructureException e){
 					throw e;
-				} catch (IllegalTransactionStateException | NoSuchTransactionException e){ // picked up by someone else
+				} catch (IllegalTransactionStateException | NoSuchTransactionException | NotOwningTransactionException e){ // picked up by someone else
 					continue; // try next one
 				} catch (Exception e){	// only possible: StorageException|RuntimeException
 					throw new TransactionStorageInfrastructureException("Failed to update transaction entity for retry: " + transactionKey, e);
