@@ -529,7 +529,8 @@ public class DefaultTransactionalStreamDataBatchProcessing<M> implements Transac
 						}
 					}else{  // we need to make sure that all items in the range had been fetched
 						if (!fetchedLastPosition.equals(transaction.getEndPosition())){
-							throw new Exception("Unable to fetch all the data in range within duration " + DurationFormatter.format(receiveTimeoutMillis));
+							throw new Exception("Unable to fetch all the data in range within duration " + DurationFormatter.format(receiveTimeoutMillis)
+											+ ", endPosition=" + transaction.getEndPosition() + ", fetchedLastPosition=" + fetchedLastPosition);
 						}
 					}
 					succeeded = batchProcessor.finish(context);
