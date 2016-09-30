@@ -24,11 +24,6 @@ import javax.jms.MessageConsumer;
 import javax.jms.Queue;
 import javax.jms.Session;
 
-import net.sf.jabb.dstream.ex.DataStreamInfrastructureException;
-import net.sf.jabb.util.bean.DoubleValueBean;
-import net.sf.jabb.util.ex.ExceptionUncheckUtility.FunctionThrowsExceptions;
-import net.sf.jabb.util.jms.JmsUtility;
-
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.jgroups.util.UUID;
 
@@ -36,6 +31,11 @@ import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
+
+import net.sf.jabb.dstream.ex.DataStreamInfrastructureException;
+import net.sf.jabb.util.bean.DoubleValueBean;
+import net.sf.jabb.util.ex.ExceptionUncheckUtility.FunctionThrowsExceptions;
+import net.sf.jabb.util.jms.JmsUtility;
 
 /**
  * Template of StreamDataSupplier implementation based on JMS.
@@ -187,7 +187,7 @@ abstract public class JmsConsumerStreamDataSupplier<M> implements StreamDataSupp
 		}
 	}
 	
-	protected ReceiveStatus receive(Function<M, Long> receiver, String messageSelector, Predicate<Message> outOfRangeCheck) 
+	protected ReceiveStatus receive(Function<M, Long> receiver, String messageSelector, Function<Message, Integer> inRangeChecker) 
 			throws DataStreamInfrastructureException{
 		Session session = null;
 		MessageConsumer consumer = null;
@@ -202,12 +202,17 @@ abstract public class JmsConsumerStreamDataSupplier<M> implements StreamDataSupp
 			while (receiveTimeoutMillis > 0){
 				message = consumer.receive(receiveTimeoutMillis < MAX_RECEIVE_TIMEOUT ? receiveTimeoutMillis : MAX_RECEIVE_TIMEOUT);
 				if (message != null){
-					if (outOfRangeCheck.test(message)){
+					int chk = inRangeChecker.apply(message);
+					if (chk <= 0){	// in range
+						receiveTimeoutMillis = receiver.apply(convert(message));
+						lastMessage = message;
+						if (chk == 0){	// the very last in range
+							break;
+						}
+					}else{		// out of range
 						outOfRangeReached = true;
 						break;
 					}
-					receiveTimeoutMillis = receiver.apply(convert(message));
-					lastMessage = message;
 				}else{
 					receiveTimeoutMillis = receiver.apply(null);
 				}
@@ -228,28 +233,28 @@ abstract public class JmsConsumerStreamDataSupplier<M> implements StreamDataSupp
 	public ReceiveStatus receive(Function<M, Long> receiver, String startPosition, String endPosition) 
 			throws DataStreamInfrastructureException{
 		return receive(receiver, messageSelector(startPosition), 
-				message -> endPosition != null && !isInRange(position(message), endPosition));
+				message -> checkInRange(position(message), endPosition));
 	}
 
 	@Override
 	public ReceiveStatus receive(Function<M, Long> receiver, Instant startEnqueuedTime, Instant endEnqueuedTime) 
 			throws DataStreamInfrastructureException{
 		return receive(receiver, messageSelector(startEnqueuedTime), 
-				message -> endEnqueuedTime != null && !isInRange(enqueuedTime(message), endEnqueuedTime));
+				message -> checkInRange(enqueuedTime(message), endEnqueuedTime));
 	}
 
 	@Override
 	public ReceiveStatus receive(Function<M, Long> receiver, String startPosition, Instant endEnqueuedTime) 
 			throws DataStreamInfrastructureException{
 		return receive(receiver, messageSelector(startPosition), 
-				message -> endEnqueuedTime != null && !isInRange(enqueuedTime(message), endEnqueuedTime));
+				message -> checkInRange(enqueuedTime(message), endEnqueuedTime));
 	}
 
 	@Override
 	public ReceiveStatus receive(Function<M, Long> receiver, Instant startEnqueuedTime, String endPosition) 
 			throws DataStreamInfrastructureException{
 		return receive(receiver, messageSelector(startEnqueuedTime), 
-				message -> endPosition != null && !isInRange(position(message), endPosition));
+				message -> checkInRange(position(message), endPosition));
 	}
 
 }

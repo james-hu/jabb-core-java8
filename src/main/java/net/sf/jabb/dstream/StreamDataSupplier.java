@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.apache.commons.lang3.Validate;
+
 import net.sf.jabb.dstream.ex.DataStreamInfrastructureException;
 
 /**
@@ -79,7 +81,31 @@ public interface StreamDataSupplier<M> {
 	 * @param endPosition	the end position
 	 * @return	true if in range, false otherwise
 	 */
-	boolean isInRange(String position, String endPosition);
+	default boolean isInRange(String position, String endPosition){
+		return checkInRange(position, endPosition) <= 0;
+	}
+	
+	/**
+	 * Check if a position is within the range defined by an end position
+	 * @param position		the position to be checked
+	 * @param endPosition	the end position
+	 * @return	negative if in range, zero if in range and is the very last one in range, positive if out of range
+	 */
+	default int checkInRange(String position, String endPosition){
+		Validate.isTrue(position != null, "position cannot be null");
+		if (endPosition == null){
+			return -1;
+		}else{
+			long l = Long.parseLong(position) - Long.parseLong(endPosition);
+			if (l < 0){
+				return -1;
+			}else if (l > 0){
+				return 1;
+			}else{
+				return 0;
+			}
+		}
+	}
 	
 	/**
 	 * Check if an enqueued time is within the range defined by an end enqueued
@@ -91,7 +117,34 @@ public interface StreamDataSupplier<M> {
 	 *            the end enqueued time
 	 * @return true if in range, false otherwise
 	 */
-	boolean isInRange(Instant enqueuedTime, Instant endEnqueuedTime);
+	default boolean isInRange(Instant enqueuedTime, Instant endEnqueuedTime){
+		return checkInRange(enqueuedTime, endEnqueuedTime) <= 0;
+	}
+	
+	/**
+	 * Check if an enqueued time is within the range defined by an end enqueued
+	 * time
+	 * 
+	 * @param enqueuedTime
+	 *            the enqueued time to be checked
+	 * @param endEnqueuedTime
+	 *            the end enqueued time
+	 * @return	negative if in range, zero if in range and is the very last one in range, positive if out of range
+	 */
+	default int checkInRange(Instant enqueuedTime, Instant endEnqueuedTime){
+		Validate.isTrue(enqueuedTime != null, "enqueuedTime cannot be null");
+		if (endEnqueuedTime == null){
+			return -1;
+		}else{
+			if (enqueuedTime.isBefore(endEnqueuedTime)){
+				return -1;
+			}else if (enqueuedTime.isAfter(endEnqueuedTime)){
+				return 1;
+			}else{
+				return 0;
+			}
+		}
+	}
 	
 	/**
 	 * Fetch the data/messages in the range specified by start and end positions.

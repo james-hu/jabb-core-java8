@@ -418,7 +418,10 @@ public class EventHubQpidStreamDataSupplier<M> extends JmsConsumerStreamDataSupp
 			}finally{
 				conn.start();
 			}
-			stillWaiting.await(waitForArrivalMillis, TimeUnit.MILLISECONDS);
+			boolean received = stillWaiting.await(waitForArrivalMillis, TimeUnit.MILLISECONDS);
+			if (!received){	// nothing received
+				// ignore
+			}
 		}finally{
 			JmsUtility.closeSilently(consumer, session);
 		}
@@ -555,27 +558,6 @@ public class EventHubQpidStreamDataSupplier<M> extends JmsConsumerStreamDataSupp
 	protected String messageSelector(Instant startEnqueuedTime) {
 		return "amqp.annotation.x-opt-enqueued-time > '" + startEnqueuedTime.toEpochMilli() + "'";
 	}
-
-	@Override
-	public boolean isInRange(String position, String endPosition) {
-		Validate.isTrue(position != null, "position cannot be null");
-		if (endPosition == null){
-			return true;
-		}else{
-			return Long.parseLong(position) <= Long.parseLong(endPosition);
-		}
-	}
-	
-	@Override
-	public boolean isInRange(Instant enqueuedTime, Instant endEnqueuedTime) {
-		Validate.isTrue(enqueuedTime != null, "enqueuedTime cannot be null");
-		if (endEnqueuedTime == null){
-			return true;
-		}else{
-			return !enqueuedTime.isAfter(endEnqueuedTime);
-		}
-	}
-
 
 	/* (non-Javadoc)
 	 * @see net.sf.jabb.stream.AbstractJmsDataStreamProvider#convert(javax.jms.Message)
