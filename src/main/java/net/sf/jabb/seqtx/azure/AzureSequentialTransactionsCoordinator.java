@@ -887,7 +887,8 @@ public class AzureSequentialTransactionsCoordinator implements SequentialTransac
 							wrapper.updateToEntity();
 							try{
 								table.execute(TableOperation.replace(wrapper.getEntity()));
-								logger.debug("Marked transaction '{}/{}' owned by process '{}' as timed out", wrapper.getSeriesId(), tx.getTransactionId(), tx.getProcessorId());
+								logger.debug("Marked transaction '{}/{}' owned by process '{}' as already timed out at {}", 
+										wrapper.getSeriesId(), tx.getTransactionId(), tx.getProcessorId(), tx.getTimeout());
 							}catch(StorageException e){
 								if (e.getHttpStatusCode() == 404){
 									return false;

@@ -515,7 +515,8 @@ public class DefaultTransactionalStreamDataBatchProcessing<M> implements Transac
 				long receiveTimeoutMillis = batchProcessor.receive(context, null);	// keep it for logging
 				receiveStatus = supplierWithIdAndRange.receiveInRange(msg->{
 						long remaining = batchProcessor.receive(context, msg);
-						return state.get() == State.RUNNING ? remaining : 0;
+						return state.get() == State.RUNNING && context.getTransactionTimeout().toEpochMilli() > System.currentTimeMillis()? 
+								remaining : 0;
 					}, transaction.getStartPosition(), transaction.getEndPosition());
 				fetchedLastPosition = receiveStatus.getLastPosition();
 				if (fetchedLastPosition != null){
