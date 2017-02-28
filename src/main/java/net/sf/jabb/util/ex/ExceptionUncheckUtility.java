@@ -28,6 +28,10 @@ public class ExceptionUncheckUtility {
 	}
 
 	@FunctionalInterface
+	public interface UnaryOperatorThrowsExceptions<T> extends FunctionThrowsExceptions<T, T> {
+	}
+
+	@FunctionalInterface
 	public interface PredicateThrowsExceptions<T> {
 		Boolean test(T t) throws Exception;
 	}

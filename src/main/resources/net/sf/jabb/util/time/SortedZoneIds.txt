@@ -594,9 +594,13 @@ Asia/Srednekolymsk
 # added 2016-02-16
 America/Fort_Nelson
 
-# add 2016-07-27
+# added 2016-07-27
 Asia/Tomsk
 Asia/Barnaul
 Europe/Kirov
 Europe/Astrakhan
 Europe/Ulyanovsk
+
+# added 2017-02-18
+Asia/Yangon
+Asia/Famagusta
