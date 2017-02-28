@@ -16,12 +16,18 @@ public class EventHubQpidConnectionFactory extends ConnectionFactoryImpl {
 			String remoteHost, boolean ssl, int maxSessions) {
 		this(protocol, host, port, username, password, clientId, remoteHost, ssl, maxSessions, null);
 	}
-	
+
 	public EventHubQpidConnectionFactory(String protocol, String host, int port, String username, String password, String clientId,
-			String remoteHost, boolean ssl, int maxSessions, String eventHubName) {
+										 String remoteHost, boolean ssl, int maxSessions, String eventHubName) {
+		this(protocol, host, port, username, password, clientId, remoteHost, ssl, maxSessions, eventHubName, null);
+	}
+
+	public EventHubQpidConnectionFactory(String protocol, String host, int port, String username, String password, String clientId,
+			String remoteHost, boolean ssl, int maxSessions, String eventHubName, Boolean syncPublish) {
 		super(protocol, host, port, username, password, clientId, remoteHost, ssl, maxSessions);
-		toStringContent = (username == null ? "" : username) + "@" + host + "/" + (eventHubName == null ? "?" : eventHubName) + "<-" + clientId;
-		setSyncPublish(false);
+		toStringContent = (username == null ? "" : username) + "@" + host + "/" + (eventHubName == null ? "?" : eventHubName)
+				+ "<-" + clientId + "(syncPublish=" + syncPublish + ")";
+		setSyncPublish(syncPublish);
 	}
 
 	@Override

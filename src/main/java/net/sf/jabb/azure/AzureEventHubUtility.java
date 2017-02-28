@@ -100,15 +100,19 @@ public class AzureEventHubUtility {
 	}
 
 	static public ConnectionFactory createConnectionFactory(String server, String policyName, String policyKey, String clientId){
+		return createConnectionFactory(server, policyName, policyKey, clientId, null);
+	}
+
+	static public ConnectionFactory createConnectionFactory(String server, String policyName, String policyKey, String clientId, Boolean syncPublish){
 		org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl connectionFactory = new org.apache.qpid.amqp_1_0.jms.impl.ConnectionFactoryImpl(
-				"amqps", server, 5671, policyName, policyKey, clientId, 
+				"amqps", server, 5671, policyName, policyKey, clientId,
 				server, true, 0);
-		connectionFactory.setSyncPublish(false);
+		connectionFactory.setSyncPublish(syncPublish);
 		return connectionFactory;
 	}
-	
 
-	
+
+
 	/**
 	 * Create a list of {@link SimpleStreamDataSupplierWithId}s from an Event Hub.
 	 * @param <M>		type of the message

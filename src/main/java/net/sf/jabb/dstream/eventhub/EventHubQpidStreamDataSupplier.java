@@ -260,7 +260,7 @@ public class EventHubQpidStreamDataSupplier<M> extends JmsConsumerStreamDataSupp
 	}
 	
 	/**
-	 * Create a connection factory
+	 * Create a connection factory without setting the syncPublish property
 	 * @param server		server domain name or ip address
 	 * @param policyName	policy name
 	 * @param policyKey		policy key
@@ -268,16 +268,29 @@ public class EventHubQpidStreamDataSupplier<M> extends JmsConsumerStreamDataSupp
 	 * @return	the connection factory
 	 */
 	static public ConnectionFactory createConnectionFactory(String server, String policyName, String policyKey, String eventHubName){
+		return createConnectionFactory(server, policyName, policyKey, eventHubName, null);
+	}
+
+	/**
+	 * Create a connection factory
+	 * @param server		server domain name or ip address
+	 * @param policyName	policy name
+	 * @param policyKey		policy key
+	 * @param eventHubName	name of the event hub, will only be used in log messages
+	 * @param syncPublish		whether to wait for acknowledgement after publish
+	 * @return	the connection factory
+	 */
+	static public ConnectionFactory createConnectionFactory(String server, String policyName, String policyKey, String eventHubName, Boolean syncPublish){
 		EventHubQpidConnectionFactory connectionFactory = new EventHubQpidConnectionFactory(
-				"amqps", server, 5671, policyName, policyKey, makeClientId(), 
-				server, true, 0, eventHubName);
+				"amqps", server, 5671, policyName, policyKey, makeClientId(),
+				server, true, 0, eventHubName, syncPublish);
 		return connectionFactory;
 	}
-	
-	static public WrappedJmsConnection createConnection(String server, String policyName, String policyKey, 
+
+	static public WrappedJmsConnection createConnection(String server, String policyName, String policyKey,
 			BackoffStrategy connectBackoffStrategy, WaitStrategy connectWaitStrategy,
-			Predicate<Connection> connectionValidator, String eventHubName){
-		ConnectionFactory connectionFactory = createConnectionFactory(server, policyName, policyKey, eventHubName);
+			Predicate<Connection> connectionValidator, String eventHubName, Boolean syncPublish){
+		ConnectionFactory connectionFactory = createConnectionFactory(server, policyName, policyKey, eventHubName, syncPublish);
 		
 		return new WrappedJmsConnection(connectionFactory, 
 				connectionValidator, 
@@ -285,11 +298,23 @@ public class EventHubQpidStreamDataSupplier<M> extends JmsConsumerStreamDataSupp
 				connectWaitStrategy,
 				false);
 	}
-	
-	static public WrappedJmsConnection createConnection(String server, String policyName, String policyKey, 
+
+	static public WrappedJmsConnection createConnection(String server, String policyName, String policyKey,
+														BackoffStrategy connectBackoffStrategy, WaitStrategy connectWaitStrategy,
+														Predicate<Connection> connectionValidator, String eventHubName){
+		return createConnection(server, policyName, policyKey, connectBackoffStrategy, connectWaitStrategy, connectionValidator, eventHubName, null);
+	}
+
+	static public WrappedJmsConnection createConnection(String server, String policyName, String policyKey,
+														BackoffStrategy connectBackoffStrategy, WaitStrategy connectWaitStrategy,
+														Predicate<Connection> connectionValidator, Boolean syncPublish){
+		return createConnection(server, policyName, policyKey, connectBackoffStrategy, connectWaitStrategy, connectionValidator, null, syncPublish);
+	}
+
+	static public WrappedJmsConnection createConnection(String server, String policyName, String policyKey,
 			BackoffStrategy connectBackoffStrategy, WaitStrategy connectWaitStrategy,
 			Predicate<Connection> connectionValidator){
-		return createConnection(server, policyName, policyKey, connectBackoffStrategy, connectWaitStrategy, connectionValidator, null);
+		return createConnection(server, policyName, policyKey, connectBackoffStrategy, connectWaitStrategy, connectionValidator, null, null);
 	}
 	
 	static public WrappedJmsConnection createConnectionForReceiving(String server, String policyName, String policyKey, 
@@ -298,15 +323,31 @@ public class EventHubQpidStreamDataSupplier<M> extends JmsConsumerStreamDataSupp
 			return createConnection(server, policyName, policyKey, connectBackoffStrategy, connectWaitStrategy, 
 					conn -> WrappedJmsConnection.validateConnectionByCreatingConsumer(conn, eventHub), getQueueName(eventHub));
 	}
-	
-	static public WrappedJmsConnection createConnectionForSending(String server, String policyName, String policyKey, 
+
+	static public WrappedJmsConnection createConnectionForReceiving(String server, String policyName, String policyKey,
+																	Destination eventHub,
+																	BackoffStrategy connectBackoffStrategy, WaitStrategy connectWaitStrategy,
+																	Boolean syncPublish){
+		return createConnection(server, policyName, policyKey, connectBackoffStrategy, connectWaitStrategy,
+				conn -> WrappedJmsConnection.validateConnectionByCreatingConsumer(conn, eventHub), getQueueName(eventHub), syncPublish);
+	}
+
+	static public WrappedJmsConnection createConnectionForSending(String server, String policyName, String policyKey,
 			Destination eventHub,
 			BackoffStrategy connectBackoffStrategy, WaitStrategy connectWaitStrategy,
 			String clientId){
 		return createConnection(server, policyName, policyKey, connectBackoffStrategy, connectWaitStrategy, 
 				conn -> WrappedJmsConnection.validateConnectionByCreatingProducer(conn, eventHub), getQueueName(eventHub));
 	}
-	
+
+	static public WrappedJmsConnection createConnectionForSending(String server, String policyName, String policyKey,
+																  Destination eventHub,
+																  BackoffStrategy connectBackoffStrategy, WaitStrategy connectWaitStrategy,
+																  String clientId, Boolean syncPublish){
+		return createConnection(server, policyName, policyKey, connectBackoffStrategy, connectWaitStrategy,
+				conn -> WrappedJmsConnection.validateConnectionByCreatingProducer(conn, eventHub), getQueueName(eventHub), syncPublish);
+	}
+
 	static public String getQueueName(Destination d){
 		if (d instanceof Queue){
 			try {
