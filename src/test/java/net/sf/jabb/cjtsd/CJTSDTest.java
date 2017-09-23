@@ -33,6 +33,33 @@ public class CJTSDTest {
 	}
 
 	@Test
+	public void testWithNoDurationSpecified() throws IOException {
+		LocalDateTime start = LocalDateTime.now();
+		Duration duration = Duration.ofMillis(500);
+		CJTSD cjtsd = CJTSD.builder().setUnit(ChronoUnit.MILLIS)
+				.add(start.plus(duration))
+				.addCount(10L)
+				.add(start.plus(duration).plus(duration))
+				.addCount(20L)
+				.add(start.plus(duration).plus(duration).plus(duration))
+				.addCount(30L)
+				.build();
+		assertEquals(3, cjtsd.getT().size());
+		assertEquals(3, cjtsd.getC().size());
+		assertEquals(1, cjtsd.getD().size());    // [500]
+		assertEquals(0, cjtsd.getD().get(0).intValue());
+
+		List<CJTSD.Entry> list = mapper.readValue(mapper.writeValueAsString(cjtsd), CJTSD.class).toList();
+		assertEquals(3, list.size());
+		assertEquals(10, list.get(0).getCount().longValue());
+		assertEquals(20, list.get(1).getCount().longValue());
+		assertEquals(30, list.get(2).getCount().longValue());
+		assertEquals(Duration.ofMillis(0), list.get(0).getDuration());
+		assertEquals(Duration.ofMillis(0), list.get(1).getDuration());
+		assertEquals(Duration.ofMillis(0), list.get(2).getDuration());
+	}
+
+	@Test
 	public void testSameDuration() throws IOException{
 		LocalDateTime start = LocalDateTime.now();
 		Duration duration = Duration.ofMillis(500);
