@@ -199,27 +199,24 @@ public class CJTSD extends PlainCJTSD{
 		/**
 		 * Add a data point
 		 * @param timestamp	the timestamp of the data point
-		 * @param duration	the duration
+		 * @param duration	the duration, can be null if the duration is the same as previous one or if this is the first data point and the duration is zero
 		 * @return	the builder itself
 		 */
 		public Builder add(LocalDateTime timestamp, Duration duration){
-			if (timestamps.size() == 0 && duration == null){
-				throw new IllegalArgumentException("Duration must be specified for the first data point");
-			}
 			long tsLong;
 			int durInt;
 			switch(unit){
 				case MINUTES:
 					tsLong = timestamp.toEpochSecond(ZoneOffset.UTC)/60;
-					durInt = duration == null ? -1 : (int) duration.toMinutes();
+					durInt = duration == null ? (timestamps.size() == 0 ? 0 : -1) : (int) duration.toMinutes();
 					break;
 				case SECONDS:
 					tsLong = timestamp.toEpochSecond(ZoneOffset.UTC);
-					durInt =  duration == null ? -1 : (int)(duration.toMillis() / 1000);
+					durInt =  duration == null ? (timestamps.size() == 0 ? 0 : -1) : (int)(duration.toMillis() / 1000);
 					break;
 				case MILLIS:
 					tsLong = timestamp.toInstant(ZoneOffset.UTC).toEpochMilli();
-					durInt =  duration == null ? -1 : (int) duration.toMillis();
+					durInt =  duration == null ? (timestamps.size() == 0 ? 0 : -1) : (int) duration.toMillis();
 					break;
 				default:
 					throw new IllegalArgumentException("Unit not supported: " + unit);
@@ -229,21 +226,20 @@ public class CJTSD extends PlainCJTSD{
 		}
 		
 		/**
-		 * Add a data point with the same duration as its previous data point
+		 * Add a data point with the same duration as its previous data point.
+		 * If this is the first data point, the duration will be considered as zero.
 		 * @param timestamp	the timestamp of the data point
 		 * @return	the builder itself
 		 */
 		public Builder add(long timestamp){
-			if (timestamps.size() == 0){
-				throw new IllegalArgumentException("Duration must be specified for the first data point");
-			}
 			timestamps.add(timestamp);
-			durations.add(-1);
+			durations.add(timestamps.size() == 0 ? 0 : -1);
 			return this;
 		}
 		
 		/**
-		 * Add a data point with the same duration as its previous data point
+		 * Add a data point with the same duration as its previous data point.
+		 * If this is the first data point, the duration will be considered as zero.
 		 * @param timestamp	the timestamp of the data point
 		 * @return	the builder itself
 		 */
